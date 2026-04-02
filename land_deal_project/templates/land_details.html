@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Land Details</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+body{
+font-family: Arial, sans-serif;
+margin:0;
+padding:0;
+}
+
+.container{
+padding:20px;
+}
+
+#map{
+height:80vh;
+width:100%;
+margin-top:20px;
+}
+
+.land-img{
+width:400px;
+border-radius:10px;
+margin-top:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>{{ land.title }}</h2>
+<p>{{ land.location }}</p>
+<p><strong>₹ {{ land.price }}</strong></p>
+
+<img src="/{{ land.image }}" class="land-img">
+
+<div id="map"></div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+var lat = parseFloat("{{ land.lat }}");
+var lng = parseFloat("{{ land.lng }}");
+
+var map = L.map('map').setView([lat, lng], 17);
+
+L.tileLayer(
+'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+{
+maxZoom: 19
+}
+).addTo(map);
+
+L.marker([lat, lng]).addTo(map);
+
+L.circle([lat, lng], {
+color: 'green',
+fillColor: '#0f0',
+fillOpacity: 0.3,
+radius: 120
+}).addTo(map);
+
+</script>
+
+</body>
+</html>

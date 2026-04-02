@@ -1,0 +1,7 @@
+{% for land in lands %}
+<div class="card">
+    <h3>{{ land.title }}</h3>
+    <p>Location: {{ land.location }}</p>
+    <p>Price: ₹{{ land.price }}</p>
+</div>
+{% endfor %}

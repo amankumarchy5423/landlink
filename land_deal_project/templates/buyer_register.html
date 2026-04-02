@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyer Preferences</title>
+    <link rel="stylesheet" href="static/buyer_register.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="register-container">
+
+    <div class="register-box">
+        <h2>Buyer Preferences</h2>
+        <p>Tell us what type of land you're looking for</p>
+
+        <form action="/register_buyer" method="POST">
+
+            <div class="form-group">
+                <label>Preferred Location</label>
+                <input type="text" name="location" placeholder="City / District">
+            </div>
+
+            <div class="form-group">
+                <label>Budget Range</label>
+                <input type="text" name="budget" placeholder="e.g. 10L - 25L">
+            </div>
+
+            <div class="form-group">
+                <label>Land Type</label>
+                <select name="land_type">
+                    <option value="">Select</option>
+                    <option value="residential">Residential</option>
+                    <option value="agriculture">Agricultural</option>
+                    <option value="commercial">Commercial</option>
+                    <option value="industrial">Industrial</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Minimum Area (in sq.ft)</label>
+                <input type="number" name="min_area" placeholder="e.g. 1000">
+            </div>
+
+            <div class="form-group">
+                <label>Maximum Area (in sq.ft)</label>
+                <input type="number" name="max_area" placeholder="e.g. 5000">
+            </div>
+
+            <div class="form-group">
+                <label>Road Access Required</label>
+                <select name="road_access">
+                    <option value="">Select</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Purpose</label>
+                <select name="purpose">
+                    <option value="">Select</option>
+                    <option value="investment">Investment</option>
+                    <option value="home">Build Home</option>
+                    <option value="farming">Farming</option>
+                    <option value="business">Business</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-register">Save Preferences</button>
+
+        </form>
+
+        <p class="login-link">
+            <a href="/">Back to Home</a>
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+</html>

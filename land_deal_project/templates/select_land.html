@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Select Land</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+body{
+margin:0;
+padding:0;
+}
+
+#map{
+height:100vh;
+width:100%;
+}
+
+#searchBox{
+position:absolute;
+top:10px;
+left:50%;
+transform:translateX(-50%);
+z-index:1000;
+width:320px;
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+#searchBtn{
+position:absolute;
+top:10px;
+left:calc(50% + 170px);
+z-index:1000;
+padding:10px 15px;
+background:#333;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+#confirmBtn{
+position:absolute;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+z-index:1000;
+padding:12px 20px;
+background:green;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+</style>
+
+</head>
+
+<body>
+
+<input id="searchBox" placeholder="Search location...">
+<button id="searchBtn">Search</button>
+<button id="confirmBtn">Confirm Location</button>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+var selectedLat = null;
+var selectedLng = null;
+var marker;
+
+// initialize map
+var map = L.map('map').setView([20.5937, 78.9629], 5);
+
+// satellite tiles (free)
+L.tileLayer(
+'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+{
+maxZoom: 19
+}).addTo(map);
+
+
+// SMART SEARCH FUNCTION
+document.getElementById("searchBtn").onclick = function(){
+
+let query = document.getElementById("searchBox").value.trim();
+
+if(!query) return;
+
+searchLocation(query);
+
+// recursive fallback search
+function searchLocation(q){
+
+fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(q))
+.then(res => res.json())
+.then(data => {
+
+if(data.length === 0){
+
+// fallback 1 remove commas
+if(q.includes(",")){
+searchLocation(q.replace(/,/g," "));
+return;
+}
+
+// fallback 2 add India
+if(!q.toLowerCase().includes("india")){
+searchLocation(q + " India");
+return;
+}
+
+alert("Location not found. Try city or area name.");
+return;
+}
+
+// use first best result
+let lat = data[0].lat;
+let lon = data[0].lon;
+
+map.setView([lat, lon], 17);
+
+if(marker){
+marker.setLatLng([lat, lon]);
+}else{
+marker = L.marker([lat, lon]).addTo(map);
+}
+
+selectedLat = lat;
+selectedLng = lon;
+
+});
+}
+
+};
+
+
+// click to select land
+map.on('click', function(e){
+
+selectedLat = e.latlng.lat;
+selectedLng = e.latlng.lng;
+
+if(marker){
+marker.setLatLng(e.latlng);
+}else{
+marker = L.marker(e.latlng).addTo(map);
+}
+
+});
+
+
+// confirm button
+document.getElementById("confirmBtn").onclick = function(){
+
+if(!selectedLat){
+alert("Please select land");
+return;
+}
+
+window.opener.postMessage({
+lat: selectedLat,
+lng: selectedLng
+},"*");
+
+window.close();
+
+};
+
+</script>
+
+</body>
+</html>

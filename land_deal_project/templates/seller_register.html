@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>List Your Land</title>
+
+<link rel="stylesheet" href="static/seller_register.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="register-container">
+<div class="register-box">
+
+<h2>List Your Land</h2>
+<p>Provide details of your property</p>
+
+<form action="/register_seller" method="POST" enctype="multipart/form-data">
+
+<div class="form-group">
+<label>Land Title</label>
+<input type="text" name="title" placeholder="e.g. 2 Acre Farm Land" required>
+</div>
+
+<div class="form-group">
+<label>Location</label>
+<input type="text" name="location" placeholder="City / District" required>
+</div>
+
+<div class="form-group">
+<label>Full Address</label>
+<textarea name="address" placeholder="Enter complete address"></textarea>
+</div>
+
+<div class="form-group">
+<label>Expected Price</label>
+<input type="text" name="price" placeholder="e.g. 25 Lakhs" required>
+</div>
+
+<div class="form-group">
+<label>Land Area (sq.ft)</label>
+<input type="number" name="area">
+</div>
+
+<div class="form-group">
+<label>Land Type</label>
+<select name="land_type">
+<option value="">Select</option>
+<option value="Residential">Residential</option>
+<option value="Agriculture">Agriculture</option>
+<option value="Commercial">Commercial</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Any Legal Issue?</label>
+<select name="legal_issue">
+<option value="No">No</option>
+<option value="Yes">Yes</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Upload Land Image</label>
+<input type="file" name="image" accept="image/*" required>
+</div>
+
+<!-- Map selection section -->
+<div class="form-group">
+<label>Select Land on Map</label>
+
+<button type="button" onclick="openMap()" class="btn-register">
+Open Full Map
+</button>
+
+<p id="selectedLocation" style="margin-top:8px;color:#666;">
+No location selected
+</p>
+
+</div>
+
+<input type="hidden" name="lat" id="lat">
+<input type="hidden" name="lng" id="lng">
+
+<button type="submit" class="btn-register">Post Land</button>
+
+</form>
+
+</div>
+</div>
+
+<script>
+function openMap(){
+window.open("/select_land","mapWindow","width=1100,height=700");
+}
+
+// receive coordinates from popup
+window.addEventListener("message", function(event){
+document.getElementById("lat").value = event.data.lat;
+document.getElementById("lng").value = event.data.lng;
+
+document.getElementById("selectedLocation").innerText =
+"Selected: " + event.data.lat + ", " + event.data.lng;
+});
+</script>
+
+</body>
+</html>

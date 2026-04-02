@@ -1,0 +1,92 @@
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #16a34a, #059669);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.register-container {
+    width: 100%;
+    padding: 20px;
+}
+
+#map{
+height:350px;
+width:100%;
+border-radius:10px;
+margin-top:10px;
+}
+
+.register-box {
+    background: white;
+    max-width: 420px;
+    margin: auto;
+    padding: 35px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.register-box h2 {
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.register-box p {
+    text-align: center;
+    color: gray;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    outline: none;
+    transition: 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #16a34a;
+    box-shadow: 0 0 5px rgba(22,163,74,0.3);
+}
+
+.btn-register {
+    width: 100%;
+    padding: 12px;
+    background: #16a34a;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-register:hover {
+    background: #059669;
+}
+
+.login-link {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.login-link a {
+    color: #16a34a;
+    text-decoration: none;
+    font-weight: 500;
+}

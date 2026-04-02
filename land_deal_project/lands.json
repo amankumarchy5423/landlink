@@ -1,0 +1,17 @@
+[
+    {
+        "id": 1,
+        "title": "Farm land",
+        "location": "Bhopal",
+        "price": "20 lakh",
+        "lat": 23.25,
+        "lng": 77.41,
+        "image": "static/uploads/land1.jpg"
+    },
+    {
+        "title": "House",
+        "location": "Bhopal",
+        "price": "25L",
+        "image": "seller_preference/images/8210853724_land_pic.jpeg"
+    }
+]

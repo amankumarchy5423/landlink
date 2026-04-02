@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LandLink Login</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg,#1e3c72,#2a5298);
+}
+
+.card{
+    width:380px;
+    background:white;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+}
+
+.title{
+    text-align:center;
+    margin-bottom:20px;
+    font-size:24px;
+    font-weight:bold;
+    color:#1e3c72;
+}
+
+input, select{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border-radius:8px;
+    border:1px solid #ddd;
+    font-size:14px;
+}
+
+input:focus, select:focus{
+    outline:none;
+    border-color:#2a5298;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#1e3c72;
+    color:white;
+    font-size:16px;
+    margin-top:10px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    background:#2a5298;
+}
+
+.toggle{
+    text-align:center;
+    margin-top:15px;
+    color:#2a5298;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.toggle:hover{
+    text-decoration:underline;
+}
+
+.hidden{
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<div class="title" id="formTitle">Login</div>
+
+<!-- LOGIN FORM -->
+<form method="POST" action="/login_user" id="loginForm">
+
+<select name="purpose" required>
+<option value="">Select Purpose</option>
+<option value="buy">Buy Land</option>
+<option value="sell">Sell Land</option>
+</select>
+
+<input type="text" name="phone" placeholder="Mobile Number" required>
+
+<input type="password" name="password" placeholder="Password" required>
+
+<button type="submit">Login</button>
+
+</form>
+
+
+<!-- REGISTER FORM -->
+<form method="POST" action="/register_buyer" id="registerForm" class="hidden">
+
+<select name="purpose" id="registerPurpose" required>
+<option value="">Select Purpose</option>
+<option value="buy">Buy Land</option>
+<option value="sell">Sell Land</option>
+</select>
+
+<input type="text" name="name" placeholder="Full Name" required>
+<input type="email" name="email" placeholder="Email" required>
+<input type="text" name="phone" placeholder="Mobile Number" required>
+<input type="password" name="password" placeholder="Password" required>
+<input type="password" name="confirm" placeholder="Confirm Password" required>
+
+<button type="submit">Register</button>
+
+</form>
+
+<div class="toggle" onclick="toggleForm()">
+New user? Register here
+</div>
+
+</div>
+
+<script>
+function toggleForm(){
+    let login = document.getElementById("loginForm");
+    let register = document.getElementById("registerForm");
+    let title = document.getElementById("formTitle");
+
+    login.classList.toggle("hidden");
+    register.classList.toggle("hidden");
+
+    if(login.classList.contains("hidden")){
+        title.innerText = "Register";
+    }else{
+        title.innerText = "Login";
+    }
+}
+
+document.getElementById("registerPurpose").addEventListener("change", function(){
+    if(this.value === "buy"){
+        document.getElementById("registerForm").action="/register_buyer";
+    }else{
+        document.getElementById("registerForm").action="/register_seller";
+    }
+});
+</script>
+
+</body>
+</html>

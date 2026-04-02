@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LandLink - Buy & Sell Land Easily</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Navbar -->
+<header class="bg-white/80 backdrop-blur-md shadow-sm fixed w-full z-50 border-b border-gray-100">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+
+    <!-- Logo -->
+    <div class="flex items-center space-x-2">
+      <div class="w-9 h-9 bg-green-600 rounded-lg"></div>
+      <h1 class="text-2xl font-bold text-gray-800">Land<span class="text-green-600">Link</span></h1>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="hidden md:flex items-center space-x-8">
+
+      <a href="/" class="text-gray-600 hover:text-green-600 font-medium transition">
+        Home
+      </a>
+
+      <a href="/buyer" class="text-gray-600 hover:text-green-600 font-medium transition">
+        Buy Land
+      </a>
+
+      <a href="/seller" class="text-gray-600 hover:text-green-600 font-medium transition">
+        Sell Land
+      </a>
+
+      <a href="#" class="text-gray-600 hover:text-green-600 font-medium transition">
+        About
+      </a>
+
+      {% if session.get("user") %}
+
+      <!-- Dashboard -->
+      <a href="/{{ 'buyer' if session.get('purpose')=='buy' else 'seller' }}"
+         class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-sm">
+         Dashboard
+      </a>
+
+      <!-- Profile Dropdown -->
+      <div class="relative group">
+
+        <button class="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-semibold hover:bg-green-700 transition">
+          P
+        </button>
+
+        <div class="absolute right-0 mt-3 w-52 bg-white rounded-xl shadow-lg border border-gray-100 hidden group-hover:block">
+
+          <div class="px-4 py-3 border-b">
+            <p class="text-xs text-gray-500">Signed in as</p>
+            <p class="font-medium text-gray-700">{{ session.get("user") }}</p>
+          </div>
+
+          <a href="/profile" class="block px-4 py-2 hover:bg-gray-50 text-gray-700">
+            My Profile
+          </a>
+
+          <a href="/edit_profile" class="block px-4 py-2 hover:bg-gray-50 text-gray-700">
+            Edit Profile
+          </a>
+
+          <a href="/logout" class="block px-4 py-2 hover:bg-red-50 text-red-500">
+            Logout
+          </a>
+
+        </div>
+
+      </div>
+
+      {% else %}
+
+      <!-- Login -->
+      <a href="/login"
+         class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition shadow-sm">
+         Login
+      </a>
+
+      {% endif %}
+
+    </nav>
+
+  </div>
+</header>
+
+  <!-- Hero Section -->
+  <section class="pt-28 pb-20 bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
+      <div>
+        <h2 class="text-4xl md:text-5xl font-bold leading-tight">
+          Find & Sell Land <br />
+          Smartly with Map View
+        </h2>
+        <p class="mt-6 text-lg text-green-100">
+          Connect buyers and sellers directly. Explore lands in 3D view, compare prices, and finalize deals faster.
+        </p>
+<a href="/buyer" target="_blank"
+class="bg-white text-green-600 px-6 py-3 rounded-2xl font-semibold shadow-lg hover:scale-105 transition inline-block">
+  Explore Lands
+</a>
+
+<a href="/seller" target="_blank"
+class="border border-white px-6 py-3 rounded-2xl hover:bg-white hover:text-green-600 transition inline-block">
+  Sell Your Land
+</a>
+      </div>
+
+      <div>
+        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef"
+             class="rounded-3xl shadow-2xl" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Search Section -->
+  <section class="-mt-12">
+    <div class="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl p-6">
+      <div class="grid md:grid-cols-4 gap-4">
+        <input type="text" placeholder="Location"
+          class="border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
+        
+        <input type="text" placeholder="Min Price"
+          class="border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
+        
+        <input type="text" placeholder="Max Price"
+          class="border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
+        <!-- <input type="hidden" placeholder="purpose"
+          class="border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" > -->
+        
+        <button class="bg-green-600 text-white rounded-xl shadow hover:bg-green-700">
+          Search
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="py-20">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+      <h3 class="text-3xl font-bold mb-12">Why Choose LandLink</h3>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-white p-8 rounded-2xl shadow hover:shadow-lg transition">
+          <div class="text-green-600 text-4xl mb-4">📍</div>
+          <h4 class="text-xl font-semibold">Map Based Search</h4>
+          <p class="text-gray-500 mt-2">Find lands directly on map with accurate location.</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-2xl shadow hover:shadow-lg transition">
+          <div class="text-green-600 text-4xl mb-4">🏡</div>
+          <h4 class="text-xl font-semibold">3D Land View</h4>
+          <p class="text-gray-500 mt-2">Explore land terrain using 3D visualization.</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-2xl shadow hover:shadow-lg transition">
+          <div class="text-green-600 text-4xl mb-4">🤝</div>
+          <h4 class="text-xl font-semibold">Direct Contact</h4>
+          <p class="text-gray-500 mt-2">Connect buyers and sellers instantly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Lands -->
+<section class="bg-gray-100 py-20">
+  <div class="max-w-7xl mx-auto px-6">
+    <h3 class="text-3xl font-bold mb-10 text-center">Featured Lands</h3>
+
+    <div class="grid md:grid-cols-3 gap-8">
+
+    {% for land in lands %}
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+      <img src="{{ url_for('static', filename=land.image) }}" class="h-48 w-full object-cover">
+      
+      <div class="p-6">
+        <h4 class="font-semibold text-lg">{{ land.title }}</h4>
+        <p class="text-gray-500">{{ land.location }}</p>
+        
+        <div class="flex justify-between mt-4">
+          <span class="text-green-600 font-bold">₹{{ land.price }}</span>
+<a href="/land/{{ loop.index0 }}">
+    <button class="text-green-600">View</button>
+</a>        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    </div>
+
+  </div>
+</section>
+
+  <!-- CTA -->
+  <section class="py-20 bg-green-600 text-white text-center">
+    <h3 class="text-3xl font-bold">Want to Sell Your Land?</h3>
+    <p class="mt-4">Register and list your property in minutes</p>
+    <a href="/seller" target="_blank"
+class="mt-6 bg-white text-green-600 px-8 py-3 rounded-2xl font-semibold shadow-lg inline-block">
+  Add Your Land
+</a>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-gray-300 py-10">
+    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8">
+      <div>
+        <h4 class="text-white font-bold text-lg">LandLink</h4>
+        <p class="mt-3">Smart platform for buying and selling land.</p>
+      </div>
+
+      <div>
+        <h4 class="text-white font-bold text-lg">Quick Links</h4>
+        <ul class="mt-3 space-y-2">
+          <a href="/buyer" target="_blank"><li>Buy Land</li></a>
+          <a href="/seller" target="_blank"><li>Sell Land</li></a>
+          
+          
+          <li>About</li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-white font-bold text-lg">Contact</h4>
+        <p class="mt-3">aman@landlink.com</p>
+      </div>
+    </div>
+
+    <div class="text-center mt-10 text-sm text-gray-500">
+      © 2026 LandLink. All rights reserved.
+    </div>
+  </footer>
+
+</body>
+</html>
