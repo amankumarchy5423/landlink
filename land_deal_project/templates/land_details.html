@@ -9,23 +9,75 @@
 body{
 font-family: Arial, sans-serif;
 margin:0;
-padding:0;
+background:#f6f7fb;
 }
 
 .container{
+max-width:1100px;
+margin:auto;
 padding:20px;
 }
 
-#map{
-height:80vh;
-width:100%;
-margin-top:20px;
+.top-bar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+}
+
+.predict-btn{
+background:#16a34a;
+color:white;
+border:none;
+padding:8px 16px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.predict-btn:hover{
+background:#15803d;
+}
+
+.card{
+background:white;
+padding:15px;
+border-radius:12px;
+box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
 .land-img{
-width:400px;
+width:50%;
+height:350px;
+object-fit:cover;
 border-radius:10px;
 margin-top:10px;
+}
+
+#map{
+height:350px;
+margin-top:15px;
+border-radius:10px;
+}
+
+.price{
+color:#16a34a;
+font-weight:bold;
+font-size:20px;
+}
+
+.predict-panel{
+display:none;
+margin-top:15px;
+padding:15px;
+background:#f0fdf4;
+border-radius:10px;
+}
+
+input,select{
+padding:6px;
+margin-top:4px;
+margin-bottom:10px;
+width:200px;
 }
 </style>
 
@@ -35,13 +87,50 @@ margin-top:10px;
 
 <div class="container">
 
+<div class="top-bar">
+<div>
 <h2>{{ land.title }}</h2>
 <p>{{ land.location }}</p>
-<p><strong>₹ {{ land.price }}</strong></p>
+<p class="price">₹ {{ land.price }}</p>
+</div>
 
-<img src="/{{ land.image }}" class="land-img">
+<button class="predict-btn" onclick="togglePredict()">
+Predict Price
+</button>
+</div>
+
+<div class="card">
+<img src="{{ url_for('static', filename=land.image) }}" class="land-img">
 
 <div id="map"></div>
+</div>
+
+<!-- Hidden ML Panel -->
+<div class="predict-panel" id="predictBox">
+
+<form method="POST" action="/predict_price">
+
+<label>Area</label><br>
+<input type="number" name="area" required><br>
+
+<label>Road Access</label><br>
+<select name="road">
+<option value="1">Yes</option>
+<option value="0">No</option>
+</select><br>
+
+<label>Distance from City</label><br>
+<input type="number" name="distance" step="0.1" required><br>
+
+<button class="predict-btn" type="submit">Predict</button>
+
+</form>
+
+{% if predicted_price %}
+<h4>Estimated Price: ₹ {{ predicted_price }}</h4>
+{% endif %}
+
+</div>
 
 </div>
 
@@ -49,8 +138,13 @@ margin-top:10px;
 
 <script>
 
-var lat = parseFloat("{{ land.lat }}");
-var lng = parseFloat("{{ land.lng }}");
+function togglePredict(){
+var box = document.getElementById("predictBox");
+box.style.display = box.style.display === "block" ? "none" : "block";
+}
+
+var lat = Number("{{ land.lat }}");
+var lng = Number("{{ land.lng }}");
 
 var map = L.map('map').setView([lat, lng], 17);
 

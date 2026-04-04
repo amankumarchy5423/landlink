@@ -18,7 +18,7 @@
 <h2>List Your Land</h2>
 <p>Provide details of your property</p>
 
-<form action="/register_seller" method="POST" enctype="multipart/form-data">
+<form action="/register_seller" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
 
 <div class="form-group">
 <label>Land Title</label>
@@ -99,12 +99,32 @@ window.open("/select_land","mapWindow","width=1100,height=700");
 
 // receive coordinates from popup
 window.addEventListener("message", function(event){
+
+if(event.data.lat && event.data.lng){
+
 document.getElementById("lat").value = event.data.lat;
 document.getElementById("lng").value = event.data.lng;
 
 document.getElementById("selectedLocation").innerText =
 "Selected: " + event.data.lat + ", " + event.data.lng;
+
+}
+
 });
+
+// VALIDATION BEFORE SUBMIT
+function validateForm(){
+
+var lat = document.getElementById("lat").value;
+var lng = document.getElementById("lng").value;
+
+if(lat === "" || lng === ""){
+alert("Please select land location on map");
+return false;
+}
+
+return true;
+}
 </script>
 
 </body>

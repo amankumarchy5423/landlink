@@ -1,7 +1,68 @@
-{% for land in lands %}
-<div class="card">
-    <h3>{{ land.title }}</h3>
-    <p>Location: {{ land.location }}</p>
-    <p>Price: ₹{{ land.price }}</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Results</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gray-50">
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">
+        Search Results
+    </h1>
+
+    {% if lands %}
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+        {% for land in lands %}
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition overflow-hidden">
+
+            <!-- Image -->
+            <img 
+                src="{{ url_for('static', filename='uploads/' + land.image) }}" 
+                class="w-full h-48 object-cover"
+            >
+
+            <!-- Content -->
+            <div class="p-5">
+
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">
+                    {{ land.title }}
+                </h3>
+
+                <p class="text-gray-600 mb-1">
+                    📍 {{ land.location }}
+                </p>
+
+                <p class="text-green-600 font-bold text-lg mb-4">
+                    ₹{{ land.price }}
+                </p>
+
+                <a href="/land/{{ loop.index0 }}"
+                   class="block text-center bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
+                   View Details
+                </a>
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+    <div class="text-center text-gray-500 text-lg">
+        No lands found matching your criteria.
+    </div>
+    {% endif %}
+
 </div>
-{% endfor %}
+
+</body>
+</html>

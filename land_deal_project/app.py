@@ -142,16 +142,17 @@ def register_seller():
 
     phone = session["user"]
 
-    # save image in static/uploads
-    image = request.files["image"]
-    image_name = f"{phone}_{image.filename}"
+    # --------- Image Upload ----------
+    image = request.files.get("image")
+    image_relative_path = ""
 
-    image_path = os.path.join(UPLOAD_FOLDER, image_name)
-    image.save(image_path)
+    if image and image.filename != "":
+        image_name = f"{phone}_{image.filename}"
+        image_path = os.path.join(UPLOAD_FOLDER, image_name)
+        image.save(image_path)
+        image_relative_path = f"uploads/{image_name}"
 
-    # store relative path
-    image_relative_path = f"uploads/{image_name}"
-
+    # --------- Seller Data ----------
     data = {
         "phone": phone,
         "title": request.form.get("title"),
@@ -164,15 +165,24 @@ def register_seller():
         "image": image_relative_path
     }
 
-    # save seller preference
-    filepath = os.path.join(BASE_DIR, "seller_preference", f"{phone}.json")
-
-    with open(filepath, "w") as f:
+    # --------- Save seller preference ----------
+    pref_path = os.path.join(BASE_DIR, "seller_preference", f"{phone}.json")
+    with open(pref_path, "w") as f:
         json.dump(data, f, indent=4)
 
-    # --------------------------
-    # Update lands.json
-    # --------------------------
+    # --------- Save seller login data ----------
+    seller_path = os.path.join(BASE_DIR, "seller_data", f"{phone}.json")
+
+    if not os.path.exists(seller_path):
+        seller_login_data = {
+            "phone": phone,
+            "password": "1234"
+        }
+
+        with open(seller_path, "w") as f:
+            json.dump(seller_login_data, f, indent=4)
+
+    # --------- Update lands.json ----------
     lands_file = os.path.join(BASE_DIR, "lands.json")
 
     if os.path.exists(lands_file):
@@ -194,7 +204,8 @@ def register_seller():
     with open(lands_file, "w") as f:
         json.dump(lands, f, indent=4)
 
-    return redirect("/")
+    return redirect("/")    # --------------------------
+   
 
 
 # -------------------------
@@ -287,18 +298,27 @@ def save_profile():
 
 @app.route("/search")
 def search():
-    location = request.args.get("location")
-    min_price = request.args.get("min_price")
-    max_price = request.args.get("max_price")
 
-    results = Land.query.filter(
-        Land.location.contains(location),
-        Land.price >= min_price,
-        Land.price <= max_price
-    ).all()
+    location = request.args.get("location", "").lower()
+    min_price = int(request.args.get("min_price", 0))
+    max_price = int(request.args.get("max_price", 999999999))
+
+    with open("lands.json") as f:
+        lands = json.load(f)
+
+    results = []
+
+    for land in lands:
+        price = int(land["price"])
+
+        if (
+            location in land["location"].lower()
+            and price >= min_price
+            and price <= max_price
+        ):
+            results.append(land)
 
     return render_template("search_results.html", lands=results)
-
 
 if __name__ == "__main__":
     app.run(debug=True)

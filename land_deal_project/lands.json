@@ -1,17 +1,37 @@
 [
     {
-        "id": 1,
-        "title": "Farm land",
-        "location": "Bhopal",
-        "price": "20 lakh",
-        "lat": 23.25,
-        "lng": 77.41,
-        "image": "static/uploads/land1.jpg"
+        "id": 3,
+        "title": "Luxury House",
+        "location": "MP nagar, Bhopal",
+        "price": "3500000",
+        "image": "uploads/8210853724_luxury-family-house-stairwell-over-front-yard-land-terrace-expensive-residential-173387139.webp"
     },
     {
-        "title": "House",
+        "id": 1,
+        "title": "DB city ",
+        "location": "MP Nagar Bhopal",
+        "price": "12000000",
+        "image": "uploads/8210853724_DB_city.jpeg"
+    },
+    {
+        "id": 2,
+        "title": "Residencial House ",
         "location": "Bhopal",
-        "price": "25L",
-        "image": "seller_preference/images/8210853724_land_pic.jpeg"
+        "price": "2500000",
+        "image": "uploads/8210853724_mig_24.jpeg"
+    },
+    {
+        "id": 3,
+        "title": "Farm Land",
+        "location": "Bhopal, Delhi",
+        "price": "5000000",
+        "image": "uploads/8210853724_Farm_land.jpeg"
+    },
+    {
+        "id": 4,
+        "title": "Residential Land",
+        "location": "Bhopal",
+        "price": "2600000",
+        "image": "uploads/8210853724_land_pic.jpeg"
     }
 ]
