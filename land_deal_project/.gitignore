@@ -1,1 +1,6 @@
 .venv/
+Data/
+buyer_data/
+buyer_preference/
+seller_data/
+static/uploads/
