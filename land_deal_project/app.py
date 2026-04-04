@@ -31,31 +31,69 @@ def login_page():
 # -------------------------
 # Login Submit
 # -------------------------
-@app.route("/login_user", methods=["POST"])
-def login_user():
+# @app.route("/login_user", methods=["POST"])
+# def login_user():
+#     phone = request.form.get("phone")
+#     password = request.form.get("password")
+#     purpose = request.form.get("purpose")
+
+#     folder = "buyer_data" if purpose == "buy" else "seller_data"
+#     filepath = os.path.join(BASE_DIR, folder, f"{phone}.json")
+
+#     if not os.path.exists(filepath):
+#         return "User not found"
+
+#     with open(filepath, "r") as f:
+#         user = json.load(f)
+
+#     if user["password"] == password:
+#         session["user"] = phone
+#         session["purpose"] = purpose
+
+#         if purpose == "buy":
+#             return redirect("/buyer")
+#         else:
+#             return redirect("/seller")
+#     else:
+#         return "Wrong password"
+
+
+@app.route("/signup", methods=["POST"])
+def signup():
+    name = request.form.get("name")
+    email = request.form.get("email")
     phone = request.form.get("phone")
     password = request.form.get("password")
+    confirm = request.form.get("confirm")
     purpose = request.form.get("purpose")
+
+    if password != confirm:
+        return "Passwords do not match"
 
     folder = "buyer_data" if purpose == "buy" else "seller_data"
     filepath = os.path.join(BASE_DIR, folder, f"{phone}.json")
 
-    if not os.path.exists(filepath):
-        return "User not found"
+    if os.path.exists(filepath):
+        return "User already exists with this number"
 
-    with open(filepath, "r") as f:
-        user = json.load(f)
+    user_data = {
+        "name": name,
+        "email": email,
+        "phone": phone,
+        "password": password
+    }
 
-    if user["password"] == password:
-        session["user"] = phone
-        session["purpose"] = purpose
+    with open(filepath, "w") as f:
+        json.dump(user_data, f, indent=4)
 
-        if purpose == "buy":
-            return redirect("/buyer")
-        else:
-            return redirect("/seller")
+    # Auto login after register
+    session["user"] = phone
+    session["purpose"] = purpose
+
+    if purpose == "buy":
+        return redirect("/buyer")
     else:
-        return "Wrong password"
+        return redirect("/seller")
 
 
 # -------------------------
@@ -152,6 +190,10 @@ def register_seller():
         image.save(image_path)
         image_relative_path = f"uploads/{image_name}"
 
+    # --------- Get Map Coordinates ----------
+    lat = request.form.get("lat")
+    lng = request.form.get("lng")
+
     # --------- Seller Data ----------
     data = {
         "phone": phone,
@@ -162,7 +204,9 @@ def register_seller():
         "area": request.form.get("area"),
         "land_type": request.form.get("land_type"),
         "legal_issue": request.form.get("legal_issue"),
-        "image": image_relative_path
+        "image": image_relative_path,
+        "lat": lat,
+        "lng": lng
     }
 
     # --------- Save seller preference ----------
@@ -195,8 +239,14 @@ def register_seller():
         "id": len(lands),
         "title": data["title"],
         "location": data["location"],
+        "address": data["address"],
         "price": data["price"],
-        "image": data["image"]
+        "area": data["area"],
+        "land_type": data["land_type"],
+        "legal_issue": data["legal_issue"],
+        "image": data["image"],
+        "lat": float(lat) if lat else None,
+        "lng": float(lng) if lng else None
     }
 
     lands.append(land_card)
@@ -204,8 +254,7 @@ def register_seller():
     with open(lands_file, "w") as f:
         json.dump(lands, f, indent=4)
 
-    return redirect("/")    # --------------------------
-   
+    return redirect("/")
 
 
 # -------------------------
@@ -319,6 +368,15 @@ def search():
             results.append(land)
 
     return render_template("search_results.html", lands=results)
+
+
+@app.route("/map-search")
+def map_search():
+
+    with open("lands.json") as f:
+        lands = json.load(f)
+
+    return render_template("map_search.html", lands=lands)
 
 if __name__ == "__main__":
     app.run(debug=True)

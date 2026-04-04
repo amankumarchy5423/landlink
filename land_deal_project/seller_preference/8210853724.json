@@ -1,11 +1,13 @@
 {
     "phone": "8210853724",
-    "title": "Residential Land",
+    "title": "House ",
     "location": "Bhopal",
     "address": "MIG24 , Rajeev Nagar sector A , Bhopal  , MP",
-    "price": "26 L",
-    "area": "1600",
+    "price": "3000000",
+    "area": "1500",
     "land_type": "Residential",
     "legal_issue": "No",
-    "image": "uploads/8210853724_land_pic.jpeg"
+    "image": "uploads/8210853724_mig_24.jpeg",
+    "lat": "23.278814319541482",
+    "lng": "77.4441182613373"
 }

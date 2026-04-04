@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Map Search</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+body{
+margin:0;
+padding:0;
+}
+#map{
+height:100vh;
+width:100%;
+}
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<script>
+var map = L.map('map').setView([23.2599, 77.4126], 5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+maxZoom: 18
+}).addTo(map);
+
+// IMPORTANT: safe JSON parsing
+var lands = JSON.parse('{{ lands | tojson | safe }}');
+
+lands.forEach(function(land){
+
+    if(land.lat && land.lng){
+
+        var marker = L.marker([land.lat, land.lng]).addTo(map);
+
+        marker.bindPopup(
+            "<b>" + land.title + "</b><br>" +
+            land.location + "<br>" +
+            "₹" + land.price + "<br>" +
+            "<a href='/land/" + land.id + "'>View Details</a>"
+        );
+    }
+
+});
+</script>
+
+</body>
+</html>

@@ -1,84 +1,525 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buyer Preferences</title>
-    <link rel="stylesheet" href="static/buyer_register.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Buyer Preferences — LandLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --green:        #1a6b3c;
+      --green-mid:    #22883f;
+      --green-accent: #34d068;
+      --green-light:  #e8f7ee;
+      --cream:        #faf8f3;
+      --dark:         #111a14;
+      --gray:         #6b7280;
+      --border:       #e8e8e8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      background: var(--cream);
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left {
+      background: linear-gradient(160deg, #0d3320 0%, #1a6b3c 55%, #22883f 100%);
+      padding: 48px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .left::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .left::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; right: -80px;
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(52,208,104,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .brand {
+      position: relative; z-index: 2;
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .brand h1 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.45rem; font-weight: 700;
+      color: white;
+    }
+
+    .brand h1 span { color: var(--green-accent); }
+
+    .left-mid {
+      position: relative; z-index: 2;
+    }
+
+    .left-mid .step-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.85);
+      font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      padding: 5px 14px; border-radius: 100px;
+      margin-bottom: 20px;
+    }
+
+    .left-mid h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 700; color: white; line-height: 1.2;
+      margin-bottom: 14px;
+    }
+
+    .left-mid h2 em { font-style: italic; color: var(--green-accent); }
+
+    .left-mid p {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.95rem; line-height: 1.7; font-weight: 300;
+      max-width: 320px;
+    }
+
+    /* Why fill this */
+    .why-list {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+
+    .why-item {
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+
+    .why-icon {
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .why-item p { font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.5; font-weight: 300; }
+    .why-item p strong { color: white; font-weight: 600; display: block; margin-bottom: 2px; }
+
+    /* ── RIGHT PANEL ── */
+    .right {
+      padding: 48px 44px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .form-header { margin-bottom: 28px; }
+
+    .form-header h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--dark); margin-bottom: 5px;
+    }
+
+    .form-header p { font-size: 0.88rem; color: var(--gray); font-weight: 300; }
+
+    /* Progress bar */
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 100px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--green), var(--green-accent));
+      border-radius: 100px;
+      transition: width 0.4s ease;
+    }
+
+    /* Form sections */
+    .form-section {
+      margin-bottom: 24px;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #bbb;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1; height: 1px;
+      background: var(--border);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .form-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #444;
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-wrap .icon {
+      position: absolute;
+      left: 13px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px; color: #ccc;
+      pointer-events: none;
+    }
+
+    .input-wrap input,
+    .input-wrap select {
+      width: 100%;
+      padding: 12px 13px 12px 38px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      color: var(--dark);
+      background: white;
+      transition: all 0.2s;
+      outline: none;
+      appearance: none;
+    }
+
+    .input-wrap input:focus,
+    .input-wrap select:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(26,107,60,0.08);
+    }
+
+    .input-wrap input::placeholder { color: #ccc; }
+
+    /* Chip selects for land type & purpose */
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem; font-weight: 500;
+      color: var(--gray);
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .chip:hover { border-color: var(--green); color: var(--green); }
+
+    .chip.selected {
+      background: var(--green-light);
+      border-color: var(--green);
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    /* Hidden inputs for chip values */
+    input[type="hidden"] { display: none; }
+
+    /* Submit */
+    .submit-row {
+      display: flex; align-items: center;
+      gap: 14px; margin-top: 8px;
+    }
+
+    .btn-submit {
+      flex: 1;
+      padding: 14px;
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    .btn-submit:hover {
+      background: var(--green-mid);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(26,107,60,0.25);
+    }
+
+    .btn-back {
+      padding: 14px 20px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; font-weight: 500;
+      color: var(--gray);
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-back:hover { border-color: var(--green); color: var(--green); }
+
+    /* Road access toggle */
+    .toggle-group { display: flex; gap: 10px; }
+
+    .toggle-btn {
+      flex: 1; padding: 11px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; font-weight: 500;
+      color: var(--gray);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .toggle-btn:hover { border-color: var(--green); color: var(--green); }
+    .toggle-btn.selected {
+      background: var(--green-light);
+      border-color: var(--green);
+      color: var(--green); font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .left { display: none; }
+      .right { padding: 32px 20px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="register-container">
+<!-- ── LEFT PANEL ── -->
+<div class="left">
+  <a href="/" class="brand">
+    <div class="brand-icon">🌿</div>
+    <h1>Land<span>Link</span></h1>
+  </a>
 
-    <div class="register-box">
-        <h2>Buyer Preferences</h2>
-        <p>Tell us what type of land you're looking for</p>
+  <div class="left-mid">
+    <div class="step-label">🏡 Step 2 of 2</div>
+    <h2>Find Your <em>Perfect</em> Land</h2>
+    <p>Share your preferences so we can match you with the most relevant listings across India.</p>
+  </div>
 
-        <form action="/register_buyer" method="POST">
+  <div class="why-list">
+    <div class="why-item">
+      <div class="why-icon">🎯</div>
+      <p><strong>Smart Matching</strong>We'll show you only lands that fit your budget and requirements.</p>
+    </div>
+    <div class="why-item">
+      <div class="why-icon">🔔</div>
+      <p><strong>Instant Alerts</strong>Get notified when a new matching listing goes live.</p>
+    </div>
+    <div class="why-item">
+      <div class="why-icon">🗺️</div>
+      <p><strong>Map View</strong>Visualize matching lands on an interactive map.</p>
+    </div>
+  </div>
+</div>
 
-            <div class="form-group">
-                <label>Preferred Location</label>
-                <input type="text" name="location" placeholder="City / District">
-            </div>
+<!-- ── RIGHT PANEL ── -->
+<div class="right">
+  <div class="form-header">
+    <h3>Your Land Preferences</h3>
+    <p>Fill in what you're looking for — takes less than 2 minutes</p>
+  </div>
 
-            <div class="form-group">
-                <label>Budget Range</label>
-                <input type="text" name="budget" placeholder="e.g. 10L - 25L">
-            </div>
+  <!-- Progress bar (filled by JS as user fills form) -->
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
 
-            <div class="form-group">
-                <label>Land Type</label>
-                <select name="land_type">
-                    <option value="">Select</option>
-                    <option value="residential">Residential</option>
-                    <option value="agriculture">Agricultural</option>
-                    <option value="commercial">Commercial</option>
-                    <option value="industrial">Industrial</option>
-                </select>
-            </div>
+  <form action="/register_buyer" method="POST" id="buyerForm">
 
-            <div class="form-group">
-                <label>Minimum Area (in sq.ft)</label>
-                <input type="number" name="min_area" placeholder="e.g. 1000">
-            </div>
+    <!-- SECTION 1: Location & Budget -->
+    <div class="form-section">
+      <div class="section-label">📍 Location & Budget</div>
+      <div class="form-row">
 
-            <div class="form-group">
-                <label>Maximum Area (in sq.ft)</label>
-                <input type="number" name="max_area" placeholder="e.g. 5000">
-            </div>
+        <div class="form-group">
+          <label>Preferred Location</label>
+          <div class="input-wrap">
+            <span class="icon">📍</span>
+            <input type="text" name="location" placeholder="City / District / State">
+          </div>
+        </div>
 
-            <div class="form-group">
-                <label>Road Access Required</label>
-                <select name="road_access">
-                    <option value="">Select</option>
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
-                </select>
-            </div>
+        <div class="form-group">
+          <label>Budget Range</label>
+          <div class="input-wrap">
+            <span class="icon">₹</span>
+            <input type="text" name="budget" placeholder="e.g. 10L – 50L">
+          </div>
+        </div>
 
-            <div class="form-group">
-                <label>Purpose</label>
-                <select name="purpose">
-                    <option value="">Select</option>
-                    <option value="investment">Investment</option>
-                    <option value="home">Build Home</option>
-                    <option value="farming">Farming</option>
-                    <option value="business">Business</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn-register">Save Preferences</button>
-
-        </form>
-
-        <p class="login-link">
-            <a href="/">Back to Home</a>
-        </p>
-
+      </div>
     </div>
 
+    <!-- SECTION 2: Land Type -->
+    <div class="form-section">
+      <div class="section-label">🏗️ Land Type</div>
+      <input type="hidden" name="land_type" id="landTypeVal">
+      <div class="chip-group" id="landTypeGroup">
+        <div class="chip" onclick="selectChip('landTypeGroup','landTypeVal','residential',this)">🏠 Residential</div>
+        <div class="chip" onclick="selectChip('landTypeGroup','landTypeVal','agriculture',this)">🌾 Agricultural</div>
+        <div class="chip" onclick="selectChip('landTypeGroup','landTypeVal','commercial',this)">🏢 Commercial</div>
+        <div class="chip" onclick="selectChip('landTypeGroup','landTypeVal','industrial',this)">🏭 Industrial</div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: Area -->
+    <div class="form-section">
+      <div class="section-label">📐 Area Requirements</div>
+      <div class="form-row">
+
+        <div class="form-group">
+          <label>Minimum Area (sq.ft)</label>
+          <div class="input-wrap">
+            <span class="icon">↔</span>
+            <input type="number" name="min_area" placeholder="e.g. 1000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Maximum Area (sq.ft)</label>
+          <div class="input-wrap">
+            <span class="icon">↔</span>
+            <input type="number" name="max_area" placeholder="e.g. 5000">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION 4: Road Access -->
+    <div class="form-section">
+      <div class="section-label">🛣️ Road Access</div>
+      <input type="hidden" name="road_access" id="roadAccessVal">
+      <div class="toggle-group">
+        <div class="toggle-btn" onclick="selectToggle('roadAccessVal','yes',this)">✅ Yes, Required</div>
+        <div class="toggle-btn" onclick="selectToggle('roadAccessVal','no',this)">❌ Not Necessary</div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: Purpose -->
+    <div class="form-section">
+      <div class="section-label">🎯 Purpose of Purchase</div>
+      <input type="hidden" name="purpose" id="purposeVal">
+      <div class="chip-group" id="purposeGroup">
+        <div class="chip" onclick="selectChip('purposeGroup','purposeVal','investment',this)">📈 Investment</div>
+        <div class="chip" onclick="selectChip('purposeGroup','purposeVal','home',this)">🏠 Build Home</div>
+        <div class="chip" onclick="selectChip('purposeGroup','purposeVal','farming',this)">🌾 Farming</div>
+        <div class="chip" onclick="selectChip('purposeGroup','purposeVal','business',this)">💼 Business</div>
+      </div>
+    </div>
+
+    <!-- SUBMIT -->
+    <div class="submit-row">
+      <a href="/" class="btn-back">← Back</a>
+      <button type="submit" class="btn-submit">Save Preferences →</button>
+    </div>
+
+  </form>
 </div>
+
+<script>
+  // Chip selector (single select)
+  function selectChip(groupId, hiddenId, value, el) {
+    document.querySelectorAll(`#${groupId} .chip`).forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById(hiddenId).value = value;
+    updateProgress();
+  }
+
+  // Toggle selector (yes/no)
+  function selectToggle(hiddenId, value, el) {
+    el.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById(hiddenId).value = value;
+    updateProgress();
+  }
+
+  // Progress bar — counts filled fields
+  function updateProgress() {
+    const form = document.getElementById('buyerForm');
+    const inputs = form.querySelectorAll('input:not([type=hidden]), select');
+    const hiddens = ['landTypeVal', 'roadAccessVal', 'purposeVal'];
+
+    let filled = 0;
+    let total = inputs.length + hiddens.length;
+
+    inputs.forEach(inp => {
+      if (inp.value && inp.value.trim() !== '') filled++;
+    });
+
+    hiddens.forEach(id => {
+      if (document.getElementById(id).value !== '') filled++;
+    });
+
+    const pct = Math.round((filled / total) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  // Attach progress tracking to all inputs
+  document.querySelectorAll('#buyerForm input, #buyerForm select').forEach(el => {
+    el.addEventListener('input', updateProgress);
+  });
+</script>
 
 </body>
 </html>
