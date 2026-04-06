@@ -931,9 +931,788 @@
 <body>
 
 <!-- ── NAVBAR ── -->
-<!-- ── NAVBAR ── -->
-<header id="header">
+<!-- 
+  ════════════════════════════════════════════════════════════════
+  LandLink — Home Page: Header + Hero
+  Place this inside your home_page.html template (Flask/Jinja2)
+  Requires: lands list passed from backend as `lands`
+            session variables: user, purpose
+            seller_land passed from backend (seller's own listing)
+            token_buyers passed from backend (list of buyers who paid token)
+  ════════════════════════════════════════════════════════════════
+-->
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LandLink — India's Smartest Land Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,300;1,9..144,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --green-deep:    #0b2e1c;
+  --green-mid:     #1a6b3c;
+  --green-bright:  #22883f;
+  --green-accent:  #34d068;
+  --green-pale:    rgba(52,208,104,0.12);
+  --cream:         #faf8f3;
+  --cream-dark:    #f0ede4;
+  --ink:           #111a14;
+  --ink-light:     #4a5c4f;
+  --border:        #e2ddd4;
+  --white:         #ffffff;
+  --red:           #dc2626;
+  --amber:         #d97706;
+  --shadow-sm:     0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md:     0 8px 32px rgba(0,0,0,0.1);
+}
+
+html { scroll-behavior:smooth; }
+body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--ink); overflow-x:hidden; }
+
+/* ══════════════════════════════════════
+   HEADER
+══════════════════════════════════════ */
+#header {
+  position:sticky; top:0; z-index:400;
+  background:rgba(250,248,243,0.95);
+  backdrop-filter:blur(18px) saturate(1.4);
+  border-bottom:1px solid var(--border);
+  height:68px;
+  padding:0 44px;
+  display:flex; align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  transition:box-shadow 0.3s;
+}
+#header.scrolled { box-shadow:0 4px 32px rgba(0,0,0,0.08); }
+
+/* Logo */
+.logo {
+  display:flex; align-items:center; gap:10px;
+  text-decoration:none; flex-shrink:0;
+}
+.logo-icon {
+  width:38px; height:38px;
+  background:linear-gradient(135deg,var(--green-mid),var(--green-bright));
+  border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+  box-shadow:0 4px 12px rgba(26,107,60,0.25);
+}
+.logo h1 {
+  font-family:'Fraunces',serif; font-size:1.35rem;
+  font-weight:700; color:var(--ink); letter-spacing:-0.01em;
+}
+.logo h1 span { color:var(--green-mid); }
+
+/* Nav links */
+nav {
+  display:flex; align-items:center; gap:6px;
+  flex:1; justify-content:flex-end;
+}
+nav > a:not(.btn-primary):not(.btn-outline) {
+  padding:8px 13px; font-size:0.88rem; font-weight:500;
+  color:var(--ink-light); text-decoration:none;
+  border-radius:9px; transition:all 0.2s;
+}
+nav > a:not(.btn-primary):not(.btn-outline):hover {
+  background:var(--cream-dark); color:var(--ink);
+}
+
+/* Buttons */
+.btn-outline {
+  padding:9px 17px;
+  border:1.5px solid var(--border); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:0.88rem;
+  font-weight:600; color:var(--ink-light); background:transparent;
+  text-decoration:none; cursor:pointer; transition:all 0.2s;
+  display:inline-flex; align-items:center; gap:5px;
+}
+.btn-outline:hover { border-color:var(--green-mid); color:var(--green-mid); background:var(--green-pale); }
+
+.btn-primary {
+  padding:9px 20px;
+  background:var(--green-mid); color:white !important;
+  border:none; border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:0.88rem;
+  font-weight:600; text-decoration:none; cursor:pointer;
+  transition:all 0.25s; display:inline-flex; align-items:center; gap:6px;
+  box-shadow:0 4px 14px rgba(26,107,60,0.25);
+}
+.btn-primary:hover {
+  background:var(--green-bright);
+  transform:translateY(-1px);
+  box-shadow:0 6px 20px rgba(26,107,60,0.32);
+}
+
+/* Nav icon btn */
+.nav-icon-btn {
+  position:relative;
+  width:38px; height:38px;
+  border:1.5px solid var(--border); border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--ink-light); background:transparent;
+  transition:all 0.2s; cursor:pointer; text-decoration:none;
+  flex-shrink:0;
+}
+.nav-icon-btn:hover { border-color:var(--green-mid); color:var(--green-mid); background:var(--green-pale); }
+.nav-badge {
+  position:absolute; top:-5px; right:-5px;
+  background:var(--red); color:white;
+  font-size:0.6rem; font-weight:700;
+  width:17px; height:17px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--cream);
+}
+
+/* Profile dropdown */
+.profile-wrap { position:relative; }
+.profile-btn {
+  width:38px; height:38px;
+  background:linear-gradient(135deg,var(--green-mid),var(--green-accent));
+  border:none; border-radius:10px; cursor:pointer;
+  font-family:'Fraunces',serif; font-size:0.9rem;
+  font-weight:700; color:white;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s; box-shadow:0 2px 8px rgba(26,107,60,0.25);
+}
+.profile-btn:hover { transform:scale(1.06); }
+
+.dropdown {
+  position:absolute; top:calc(100% + 8px); right:0;
+  background:var(--white); border:1.5px solid var(--border);
+  border-radius:14px; min-width:200px;
+  box-shadow:var(--shadow-md);
+  opacity:0; pointer-events:none; transform:translateY(-6px);
+  transition:all 0.2s; z-index:500; overflow:hidden;
+}
+.profile-wrap:hover .dropdown,
+.profile-wrap:focus-within .dropdown {
+  opacity:1; pointer-events:all; transform:translateY(0);
+}
+.user-info {
+  padding:12px 14px; background:var(--cream-dark);
+  border-bottom:1px solid var(--border);
+}
+.user-info p:first-child { font-size:0.72rem; color:var(--ink-light); text-transform:uppercase; letter-spacing:0.06em; }
+.user-info p:last-child  { font-size:0.88rem; font-weight:600; color:var(--ink); margin-top:2px; }
+
+.dropdown a {
+  display:flex; align-items:center; gap:9px;
+  padding:11px 14px; text-decoration:none;
+  font-size:0.86rem; font-weight:500; color:var(--ink-light);
+  transition:background 0.15s;
+}
+.dropdown a:hover { background:var(--cream); color:var(--ink); }
+.dropdown a.logout { color:var(--red); border-top:1px solid var(--border); }
+.dropdown a.logout:hover { background:#fff5f5; }
+.dropdown a span { font-size:15px; }
+
+/* Seller nav: "My Listing" badge */
+.my-listing-btn {
+  position:relative;
+  display:inline-flex; align-items:center; gap:7px;
+  padding:9px 16px;
+  background:rgba(26,107,60,0.08); border:1.5px solid rgba(26,107,60,0.25);
+  border-radius:10px; font-family:'DM Sans',sans-serif;
+  font-size:0.85rem; font-weight:600; color:var(--green-mid);
+  text-decoration:none; cursor:pointer; transition:all 0.2s;
+}
+.my-listing-btn:hover { background:rgba(26,107,60,0.15); }
+.listing-live-dot {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--green-accent);
+  box-shadow:0 0 0 2px rgba(52,208,104,0.3);
+  animation:livePulse 1.8s infinite;
+}
+@keyframes livePulse {
+  0%,100% { box-shadow:0 0 0 2px rgba(52,208,104,0.3); }
+  50%      { box-shadow:0 0 0 5px rgba(52,208,104,0); }
+}
+
+/* Token buyers notification bell */
+.notif-btn {
+  position:relative;
+  width:38px; height:38px;
+  border:1.5px solid var(--border); border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--ink-light); background:transparent;
+  cursor:pointer; text-decoration:none; transition:all 0.2s;
+  font-size:18px;
+}
+.notif-btn:hover { border-color:var(--amber); color:var(--amber); background:rgba(217,119,6,0.06); }
+.notif-dot {
+  position:absolute; top:-4px; right:-4px;
+  background:var(--amber); color:white;
+  font-size:0.58rem; font-weight:700;
+  width:16px; height:16px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--cream);
+}
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+.hero {
+  position:relative; overflow:hidden;
+  background:var(--green-deep);
+  min-height:clamp(560px,88vh,760px);
+  display:flex; align-items:center;
+}
+
+/* Layered backgrounds */
+.hero-bg {
+  position:absolute; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse 70% 60% at 80% 50%, rgba(34,136,63,0.25) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 80% at 10% 80%, rgba(52,208,104,0.08) 0%, transparent 60%),
+    linear-gradient(135deg, #0b2e1c 0%, #0d3320 40%, #143d26 100%);
+}
+.hero-grid-overlay {
+  position:absolute; inset:0; z-index:1;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size:52px 52px;
+}
+.hero-glow {
+  position:absolute; top:-100px; right:100px;
+  width:500px; height:500px; z-index:1;
+  background:radial-gradient(circle, rgba(52,208,104,0.12) 0%, transparent 65%);
+  border-radius:50%; pointer-events:none;
+}
+
+/* Content layout */
+.hero-inner {
+  position:relative; z-index:10;
+  max-width:1180px; margin:0 auto;
+  padding:80px 44px 80px;
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:60px; align-items:center;
+}
+
+/* Left text */
+.hero-text {}
+
+.hero-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(52,208,104,0.12);
+  border:1px solid rgba(52,208,104,0.28);
+  color:var(--green-accent);
+  font-size:0.75rem; font-weight:600;
+  letter-spacing:0.06em; text-transform:uppercase;
+  padding:6px 14px; border-radius:100px;
+  margin-bottom:20px;
+  animation:fadeUp 0.5s ease both;
+}
+.hero-badge .pulse {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--green-accent);
+  animation:livePulse 1.8s infinite;
+}
+
+/* Buyer badge variant */
+.hero-badge.buyer-badge {
+  background:rgba(59,130,246,0.12);
+  border-color:rgba(59,130,246,0.28);
+  color:#60a5fa;
+}
+.hero-badge.buyer-badge .pulse { background:#60a5fa; }
+
+.hero-title {
+  font-family:'Fraunces',serif;
+  font-size:clamp(2.2rem,4vw,3.2rem);
+  font-weight:700; color:white; line-height:1.15;
+  letter-spacing:-0.02em;
+  margin-bottom:18px;
+  animation:fadeUp 0.5s 0.07s ease both;
+}
+.hero-title em { font-style:italic; color:var(--green-accent); }
+.hero-title em.buyer-em { color:#60a5fa; }
+
+.hero-desc {
+  font-size:1rem; color:rgba(255,255,255,0.65);
+  font-weight:300; line-height:1.75;
+  max-width:440px; margin-bottom:32px;
+  animation:fadeUp 0.5s 0.12s ease both;
+}
+
+/* Action buttons */
+.hero-actions {
+  display:flex; gap:12px; flex-wrap:wrap;
+  margin-bottom:40px;
+  animation:fadeUp 0.5s 0.17s ease both;
+}
+.hero-cta-primary {
+  padding:13px 26px;
+  background:var(--green-accent); color:var(--green-deep) !important;
+  border:none; border-radius:13px;
+  font-family:'DM Sans',sans-serif; font-size:0.95rem;
+  font-weight:700; text-decoration:none; cursor:pointer;
+  transition:all 0.25s; display:inline-flex; align-items:center; gap:8px;
+  box-shadow:0 6px 24px rgba(52,208,104,0.35);
+}
+.hero-cta-primary:hover {
+  background:white; transform:translateY(-2px);
+  box-shadow:0 10px 32px rgba(52,208,104,0.25);
+}
+.hero-cta-primary.blue-cta {
+  background:#3b82f6; color:white !important;
+  box-shadow:0 6px 24px rgba(59,130,246,0.35);
+}
+.hero-cta-primary.blue-cta:hover { background:#2563eb; }
+
+.hero-cta-secondary {
+  padding:13px 24px;
+  background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.85);
+  border:1.5px solid rgba(255,255,255,0.18); border-radius:13px;
+  font-family:'DM Sans',sans-serif; font-size:0.92rem;
+  font-weight:600; text-decoration:none; cursor:pointer;
+  transition:all 0.25s; display:inline-flex; align-items:center; gap:7px;
+  backdrop-filter:blur(4px);
+}
+.hero-cta-secondary:hover {
+  background:rgba(255,255,255,0.14);
+  border-color:rgba(255,255,255,0.3);
+}
+
+/* Stats */
+.hero-stats {
+  display:flex; gap:28px;
+  animation:fadeUp 0.5s 0.22s ease both;
+}
+.hero-stat {}
+.stat-num {
+  font-family:'Fraunces',serif; font-size:1.5rem;
+  font-weight:700; color:white; line-height:1.1;
+}
+.stat-label {
+  font-size:0.72rem; color:rgba(255,255,255,0.45);
+  margin-top:3px; font-weight:300;
+}
+
+/* Seller stats variant */
+.seller-stat .stat-num { color:var(--green-accent); }
+
+/* ── RIGHT: SLIDESHOW ── */
+.hero-slider-wrap {
+  position:relative;
+  animation:fadeUp 0.5s 0.1s ease both;
+}
+
+.slider-frame {
+  position:relative;
+  border-radius:22px; overflow:hidden;
+  aspect-ratio:4/3;
+  box-shadow:0 24px 64px rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.1);
+  cursor:pointer;
+}
+
+.slide {
+  position:absolute; inset:0;
+  opacity:0; transition:opacity 0.7s ease;
+  pointer-events:none;
+}
+.slide.active { opacity:1; pointer-events:all; }
+
+.slide img {
+  width:100%; height:100%; object-fit:cover;
+  display:block; transition:transform 7s ease;
+}
+.slide.active img { transform:scale(1.06); }
+
+.slide-overlay {
+  position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 50%);
+}
+
+.slide-info {
+  position:absolute; bottom:16px; left:16px; right:16px;
+  display:flex; align-items:flex-end; justify-content:space-between; gap:8px;
+}
+.slide-info h4 {
+  font-family:'Fraunces',serif; font-size:1rem;
+  font-weight:700; color:white; line-height:1.2;
+}
+.slide-info p { font-size:0.78rem; color:rgba(255,255,255,0.75); margin-top:2px; }
+.slide-price {
+  font-family:'Fraunces',serif; font-size:1rem;
+  font-weight:700; color:var(--green-accent);
+  white-space:nowrap; flex-shrink:0;
+}
+
+.slide-redirect-hint {
+  position:absolute; top:12px; right:12px;
+  background:rgba(0,0,0,0.5); backdrop-filter:blur(6px);
+  color:white; font-size:0.72rem; font-weight:600;
+  padding:5px 10px; border-radius:100px;
+  border:1px solid rgba(255,255,255,0.15);
+  opacity:0; transition:opacity 0.2s;
+}
+.slide:hover .slide-redirect-hint { opacity:1; }
+
+/* Slide indicators */
+.slide-dots {
+  display:flex; justify-content:center; gap:6px;
+  margin-top:14px;
+}
+.dot {
+  width:7px; height:7px; border-radius:50%;
+  background:rgba(255,255,255,0.25); cursor:pointer;
+  transition:all 0.3s;
+}
+.dot.active {
+  background:var(--green-accent);
+  width:22px; border-radius:4px;
+}
+
+/* Slide nav arrows */
+.slide-arrow {
+  position:absolute; top:50%; transform:translateY(-50%);
+  z-index:10; width:36px; height:36px;
+  background:rgba(255,255,255,0.12); backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.2); border-radius:50%;
+  color:white; font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s;
+}
+.slide-arrow:hover { background:rgba(255,255,255,0.22); }
+.slide-arrow.prev { left:10px; }
+.slide-arrow.next { right:10px; }
+
+/* ── FLOAT CARDS ── */
+.float-cards {
+  position:absolute; pointer-events:none;
+}
+.hero-float-card {
+  position:absolute;
+  background:rgba(250,248,243,0.95);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(226,221,212,0.7);
+  border-radius:14px; padding:10px 14px;
+  display:flex; align-items:center; gap:10px;
+  box-shadow:0 8px 28px rgba(0,0,0,0.2);
+  animation:floatBob 3.5s ease-in-out infinite;
+  min-width:180px;
+}
+.card-1 { bottom:-18px; left:-28px; animation-delay:0s; }
+.card-2 { top:-18px; right:-20px; animation-delay:1.8s; }
+
+@keyframes floatBob {
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-6px); }
+}
+
+.float-icon {
+  width:34px; height:34px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; flex-shrink:0;
+}
+.float-icon.green  { background:rgba(26,107,60,0.12); }
+.float-icon.amber  { background:rgba(217,119,6,0.12); }
+.float-icon.blue   { background:rgba(59,130,246,0.12); }
+.float-icon.purple { background:rgba(124,58,237,0.12); }
+
+.float-text p:first-child {
+  font-size:0.68rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.05em;
+  color:var(--ink-light);
+}
+.float-text p:last-child {
+  font-size:0.82rem; font-weight:600; color:var(--ink);
+  margin-top:1px;
+}
+
+/* ══════════════════════════════════════
+   SELLER: TOKEN BUYERS PANEL
+══════════════════════════════════════ */
+.token-buyers-strip {
+  background:var(--white);
+  border-bottom:1px solid var(--border);
+  padding:14px 44px;
+  display:none; /* shown via JS for sellers with token buyers */
+}
+.token-buyers-strip.show { display:block; }
+
+.tbs-inner {
+  max-width:1180px; margin:0 auto;
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+}
+.tbs-label {
+  font-size:0.78rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.06em;
+  color:var(--amber); display:flex; align-items:center; gap:6px;
+  flex-shrink:0;
+}
+.tbs-cards { display:flex; gap:10px; flex-wrap:wrap; flex:1; }
+.tbs-buyer-card {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 14px;
+  background:var(--cream); border:1.5px solid var(--border);
+  border-radius:12px; text-decoration:none;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+.tbs-buyer-card:hover { border-color:var(--green-mid); box-shadow:var(--shadow-sm); }
+.tbs-avatar {
+  width:34px; height:34px;
+  background:linear-gradient(135deg,var(--amber),#fbbf24);
+  border-radius:9px; display:flex; align-items:center;
+  justify-content:center; font-size:14px; font-weight:700;
+  color:white; flex-shrink:0;
+  font-family:'Fraunces',serif;
+}
+.tbs-info h4 { font-size:0.83rem; font-weight:600; color:var(--ink); }
+.tbs-info p  { font-size:0.72rem; color:var(--ink-light); margin-top:1px; }
+.tbs-info .tbs-phone {
+  font-size:0.72rem; color:var(--green-mid);
+  font-weight:600; margin-top:2px;
+}
+.tbs-ref { font-size:0.7rem; color:#aaa; font-family:monospace; }
+
+/* ══════════════════════════════════════
+   SEARCH BAR (below hero)
+══════════════════════════════════════ */
+.search-section {
+  position:relative; z-index:50;
+  margin-top:-32px;
+  padding:0 44px;
+  max-width:1180px; margin-left:auto; margin-right:auto;
+  margin-top:-32px;
+}
+.search-card {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:20px 24px;
+  box-shadow:0 12px 48px rgba(0,0,0,0.12);
+  display:flex; align-items:center; gap:12px;
+  flex-wrap:wrap;
+}
+.search-field {
+  flex:2; min-width:180px; position:relative;
+}
+.search-field .sf-icon {
+  position:absolute; left:12px; top:50%;
+  transform:translateY(-50%); font-size:14px; color:#b0ab9f;
+  pointer-events:none;
+}
+.search-field input, .search-field select {
+  width:100%; padding:11px 12px 11px 36px;
+  border:1.5px solid var(--border); border-radius:11px;
+  font-family:'DM Sans',sans-serif; font-size:0.88rem;
+  color:var(--ink); background:var(--cream); outline:none;
+  transition:border-color 0.2s, box-shadow 0.2s;
+  appearance:none;
+}
+.search-field input:focus, .search-field select:focus {
+  border-color:var(--green-mid); background:var(--white);
+  box-shadow:0 0 0 3px rgba(26,107,60,0.08);
+}
+.search-field input::placeholder { color:#b0ab9f; }
+.search-divider {
+  width:1px; height:36px; background:var(--border); flex-shrink:0;
+}
+.btn-search {
+  padding:12px 28px;
+  background:var(--green-mid); color:white;
+  border:none; border-radius:12px;
+  font-family:'DM Sans',sans-serif; font-size:0.92rem;
+  font-weight:700; cursor:pointer; transition:all 0.25s;
+  display:flex; align-items:center; gap:7px;
+  box-shadow:0 4px 16px rgba(26,107,60,0.25);
+  flex-shrink:0;
+}
+.btn-search:hover { background:var(--green-bright); transform:translateY(-1px); }
+
+/* ══════════════════════════════════════
+   SELLER: MY LISTING QUICK VIEW
+══════════════════════════════════════ */
+.my-listing-section {
+  max-width:1180px; margin:48px auto 0; padding:0 44px;
+  display:none;
+}
+.my-listing-section.show { display:block; }
+
+.section-eyebrow {
+  display:flex; align-items:center; gap:8px;
+  margin-bottom:6px;
+}
+.eyebrow-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  background:var(--green-pale); border:1px solid rgba(52,208,104,0.25);
+  color:var(--green-mid); font-size:0.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.06em;
+  padding:4px 11px; border-radius:100px;
+}
+.section-title {
+  font-family:'Fraunces',serif; font-size:1.5rem;
+  font-weight:700; color:var(--ink); margin-bottom:20px;
+}
+.section-title em { font-style:italic; color:var(--green-mid); }
+
+.my-land-card {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:20px; overflow:hidden;
+  display:grid; grid-template-columns:280px 1fr;
+  box-shadow:var(--shadow-sm); transition:box-shadow 0.25s;
+}
+.my-land-card:hover { box-shadow:var(--shadow-md); }
+.mlc-img {
+  height:100%; min-height:200px; position:relative; overflow:hidden;
+}
+.mlc-img img {
+  width:100%; height:100%; object-fit:cover;
+  transition:transform 0.4s;
+}
+.my-land-card:hover .mlc-img img { transform:scale(1.04); }
+.mlc-img-fb {
+  width:100%; height:100%; min-height:200px;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:6px; font-size:0.8rem;
+  color:var(--ink-light);
+  background:linear-gradient(135deg,#e8f5ed,#f0ede4);
+}
+.mlc-img-fb span { font-size:2.5rem; }
+
+.live-badge {
+  position:absolute; top:12px; left:12px;
+  background:rgba(26,107,60,0.85);
+  color:white; font-size:0.68rem; font-weight:700;
+  padding:4px 10px; border-radius:100px;
+  display:flex; align-items:center; gap:5px;
+  backdrop-filter:blur(4px);
+}
+
+.mlc-body { padding:24px 28px; display:flex; flex-direction:column; gap:12px; }
+.mlc-body h3 {
+  font-family:'Fraunces',serif; font-size:1.25rem;
+  font-weight:700; color:var(--ink);
+}
+.mlc-meta { display:flex; gap:16px; flex-wrap:wrap; }
+.mlc-meta .m {
+  display:flex; align-items:center; gap:5px;
+  font-size:0.83rem; color:var(--ink-light);
+}
+.mlc-price {
+  font-family:'Fraunces',serif; font-size:1.4rem;
+  font-weight:700; color:var(--green-mid);
+}
+.mlc-actions { display:flex; gap:10px; margin-top:auto; flex-wrap:wrap; }
+
+.btn-sm-green {
+  padding:9px 18px; background:var(--green-mid); color:white;
+  border:none; border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:0.85rem;
+  font-weight:600; text-decoration:none; cursor:pointer;
+  transition:background 0.2s; display:inline-flex;
+  align-items:center; gap:6px;
+}
+.btn-sm-green:hover { background:var(--green-bright); }
+
+.btn-sm-ghost {
+  padding:9px 16px; background:var(--cream);
+  border:1.5px solid var(--border); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:0.85rem;
+  font-weight:600; color:var(--ink-light); text-decoration:none;
+  cursor:pointer; transition:all 0.2s;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.btn-sm-ghost:hover { border-color:var(--green-mid); color:var(--green-mid); }
+
+/* Stats row for seller */
+.seller-stats-row {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+  margin-top:4px;
+}
+.seller-stat-box {
+  background:var(--cream); border:1px solid var(--border);
+  border-radius:12px; padding:12px 14px; text-align:center;
+}
+.seller-stat-box .sb-num {
+  font-family:'Fraunces',serif; font-size:1.2rem;
+  font-weight:700; color:var(--green-mid);
+}
+.seller-stat-box .sb-label {
+  font-size:0.72rem; color:var(--ink-light); margin-top:2px;
+}
+
+/* ══════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(18px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width:900px) {
+  #header { padding:0 20px; height:60px; }
+  .hero-inner { grid-template-columns:1fr; padding:60px 24px; gap:40px; }
+  .hero-slider-wrap { order:-1; }
+  .search-section { padding:0 16px; }
+  .my-listing-section { padding:0 16px; }
+  .token-buyers-strip { padding:12px 20px; }
+  .my-land-card { grid-template-columns:1fr; }
+  .mlc-img { min-height:200px; max-height:220px; }
+}
+@media (max-width:600px) {
+  nav > a:not(.btn-primary):not(.btn-outline):not(.profile-wrap *) { display:none; }
+  .hero-stats { gap:18px; }
+  .search-card { flex-direction:column; }
+  .search-divider { display:none; }
+  .btn-search { width:100%; justify-content:center; }
+  .seller-stats-row { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     TOKEN BUYERS ALERT STRIP (sellers only)
+══════════════════════════════════════ -->
+{% if session.get('purpose') == 'sell' and token_buyers %}
+<div class="token-buyers-strip show">
+  <div class="tbs-inner">
+    <div class="tbs-label">
+      🔔 Token Buyers
+      <span style="background:var(--amber);color:white;font-size:0.65rem;
+                   padding:2px 7px;border-radius:100px;">
+        {{ token_buyers|length }} New
+      </span>
+    </div>
+    <div class="tbs-cards">
+      {% for buyer in token_buyers %}
+      <div class="tbs-buyer-card">
+        <div class="tbs-avatar">{{ buyer.name[:2].upper() if buyer.name else '??' }}</div>
+        <div class="tbs-info">
+          <h4>{{ buyer.name or 'Buyer' }}</h4>
+          <p>Paid token · {{ buyer.timestamp[:10] if buyer.timestamp else '' }}</p>
+          <div class="tbs-phone">📞 {{ buyer.phone }}</div>
+          <div class="tbs-ref">Ref: {{ buyer.ref_number }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <a href="/my_bookings" class="btn-sm-ghost" style="flex-shrink:0;">View All →</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- ══════════════════════════════════════
+     HEADER
+══════════════════════════════════════ -->
+<header id="header">
   <a href="/" class="logo">
     <div class="logo-icon">🌿</div>
     <h1>Land<span>Link</span></h1>
@@ -942,136 +1721,525 @@
   <nav>
     <a href="/">Home</a>
     <a href="/map-search">Explore Map</a>
-    <a href="#">About</a>
+    <a href="/search">Browse</a>
 
     {% if session.get("user") %}
 
-      <!-- Post Property CTA -->
-      <a href="/seller" class="btn-outline" style="text-decoration:none;">
-        + List Property
-      </a>
+      {% if session.get("purpose") == "sell" %}
+        <!-- SELLER NAV -->
+        <a href="/seller" class="my-listing-btn">
+          <span class="listing-live-dot"></span>
+          My Listing
+        </a>
+        <!-- Notifications: token buyers -->
+        <a href="/my_bookings" class="notif-btn" title="Token Buyers">
+          🔔
+          {% if token_buyers %}
+          <span class="notif-dot">{{ token_buyers|length }}</span>
+          {% endif %}
+        </a>
 
-      <!-- Saved/Wishlist Icon -->
-      <a href="/saved" class="nav-icon-btn" title="Saved Lands" style="text-decoration:none;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" 
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" 
-             stroke-linejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-        </svg>
-      </a>
+      {% else %}
+        <!-- BUYER NAV -->
+        <a href="/seller" class="btn-outline">+ List Property</a>
+        <!-- Saved/Wishlist -->
+        <a href="/saved" class="nav-icon-btn" title="Saved Lands" id="savedNavBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <span class="nav-badge" id="savedBadge" style="display:none;">0</span>
+        </a>
+      {% endif %}
 
-      <!-- Profile Dropdown -->
+      <!-- Profile Dropdown (both) -->
       <div class="profile-wrap">
-
         <button class="profile-btn" title="{{ session.get('user') }}">
           {{ session.get("user")[:2].upper() }}
         </button>
-
         <div class="dropdown">
           <div class="user-info">
             <p>Signed in as</p>
-            <p>{{ session.get("user") }}</p>
+            <p>{{ session.get("user") }} · {{ '🛒 Buyer' if session.get('purpose')=='buy' else '🏡 Seller' }}</p>
           </div>
-          <a href="/profile">
-            <span>👤</span> My Profile
-          </a>
+          <a href="/profile"><span>👤</span> My Profile</a>
           <a href="/{{ 'buyer' if session.get('purpose')=='buy' else 'seller' }}">
             <span>📋</span> Dashboard
           </a>
-          <a href="/edit_profile">
-            <span>⚙️</span> Edit Profile
-          </a>
-          <a href="/logout" class="logout">
-            <span>🚪</span> Logout
-          </a>
+          {% if session.get('purpose') == 'buy' %}
+          <a href="/saved"><span>❤️</span> Saved Lands</a>
+          <a href="/my_bookings"><span>🧾</span> My Bookings</a>
+          {% else %}
+          <a href="/seller_preference"><span>📝</span> Edit Listing</a>
+          <a href="/my_bookings"><span>💰</span> Token Buyers</a>
+          {% endif %}
+          <a href="/edit_profile"><span>⚙️</span> Edit Profile</a>
+          <a href="/logout" class="logout"><span>🚪</span> Logout</a>
         </div>
-
       </div>
 
     {% else %}
-
-      <!-- Not logged in -->
-      <a href="/seller" class="btn-outline" style="text-decoration:none;">
-        + List Property
-      </a>
-      <a href="/login" class="btn-primary" style="text-decoration:none;">
-        Login →
-      </a>
-
+      <!-- GUEST NAV -->
+      <a href="/seller" class="btn-outline">+ List Property</a>
+      <a href="/login" class="btn-primary">Login →</a>
     {% endif %}
-
   </nav>
-
 </header>
 
-<!-- ── HERO ── -->
+<!-- ══════════════════════════════════════
+     HERO
+══════════════════════════════════════ -->
 <section class="hero">
-  <div class="hero-bg-pattern"></div>
-  <div class="hero-grid"></div>
+  <div class="hero-bg"></div>
+  <div class="hero-grid-overlay"></div>
+  <div class="hero-glow"></div>
 
-  <div class="hero-content">
-    <div>
+  <div class="hero-inner">
+
+    <!-- LEFT: Text -->
+    <div class="hero-text">
+
+      {% if session.get("purpose") == "sell" %}
+      <!-- SELLER HERO -->
       <div class="hero-badge">
-        <span></span> India's Smartest Land Marketplace
+        <span class="pulse"></span>
+        Seller Dashboard
       </div>
-
       <h2 class="hero-title">
-        Find & Sell Land<br>
-        <em>Smartly</em> with Map View
+        Your Land,<br>
+        <em>Listed & Live</em>
       </h2>
-
       <p class="hero-desc">
-        Connect directly with buyers and sellers. Explore listings in 3D view, compare prices at a glance, and close deals faster than ever before.
+        Manage your listing, track interested buyers, and connect directly with verified buyers across India — all in one place.
       </p>
-
       <div class="hero-actions">
-        <a href="/buyer" class="btn-primary" style="color: var(--green-primary);">
-          🔍 Explore Lands
-        </a>
-        <a href="/seller" class="btn-outline">
-          📋 List Your Land
-        </a>
+        <a href="/seller" class="hero-cta-primary">📋 Manage Listing</a>
+        <a href="/select_land" class="hero-cta-secondary">🗺 Update Location</a>
       </div>
-
       <div class="hero-stats">
-        <div class="stat">
-          <div class="stat-num">2,400+</div>
+        {% if seller_land %}
+        <div class="seller-stat">
+          <div class="stat-num" style="color:var(--green-accent);">
+            ₹{{ seller_land.price }}
+          </div>
+          <div class="stat-label">Your Listed Price</div>
+        </div>
+        <div class="seller-stat">
+          <div class="stat-num" style="color:var(--green-accent);">
+            {{ token_buyers|length if token_buyers else 0 }}
+          </div>
+          <div class="stat-label">Token Buyers</div>
+        </div>
+        <div class="seller-stat">
+          <div class="stat-num" style="color:var(--green-accent);">Live</div>
+          <div class="stat-label">Listing Status</div>
+        </div>
+        {% else %}
+        <div class="seller-stat">
+          <div class="stat-num" style="color:var(--green-accent);">2,400+</div>
           <div class="stat-label">Active Listings</div>
         </div>
-        <div class="stat">
+        <div class="seller-stat">
+          <div class="stat-num" style="color:var(--green-accent);">₹480Cr+</div>
+          <div class="stat-label">Deals Closed</div>
+        </div>
+        <div class="seller-stat">
+          <div class="stat-num" style="color:var(--green-accent);">18 States</div>
+          <div class="stat-label">Pan India</div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% elif session.get("purpose") == "buy" %}
+      <!-- BUYER HERO -->
+      <div class="hero-badge buyer-badge">
+        <span class="pulse"></span>
+        Welcome back, Buyer
+      </div>
+      <h2 class="hero-title">
+        Find Your <em class="buyer-em">Perfect</em><br>
+        Land Today
+      </h2>
+      <p class="hero-desc">
+        Browse {{ lands|length if lands else '2,400+' }} verified listings with map view, AI price predictor, and direct seller contact — no middlemen.
+      </p>
+      <div class="hero-actions">
+        <a href="/search" class="hero-cta-primary blue-cta">🔍 Search Lands</a>
+        <a href="/map-search" class="hero-cta-secondary">🗺 Explore on Map</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num">{{ lands|length if lands else '2,400+' }}</div>
+          <div class="stat-label">Active Listings</div>
+        </div>
+        <div>
           <div class="stat-num">₹480Cr+</div>
           <div class="stat-label">Deals Closed</div>
         </div>
-        <div class="stat">
+        <div>
           <div class="stat-num">18 States</div>
           <div class="stat-label">Pan India</div>
         </div>
       </div>
-    </div>
 
-    <div class="hero-image-wrap">
-      <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=700&q=80" alt="Land from above" />
+      {% else %}
+      <!-- GUEST HERO -->
+      <div class="hero-badge">
+        <span class="pulse"></span>
+        India's Smartest Land Marketplace
+      </div>
+      <h2 class="hero-title">
+        Find & Sell Land<br>
+        <em>Smartly</em> with Map View
+      </h2>
+      <p class="hero-desc">
+        Connect directly with buyers and sellers. Explore listings with satellite map view, AI price predictor, and close deals faster than ever before.
+      </p>
+      <div class="hero-actions">
+        <a href="/buyer" class="hero-cta-primary">🔍 Explore Lands</a>
+        <a href="/seller" class="hero-cta-secondary">📋 List Your Land</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num">2,400+</div>
+          <div class="stat-label">Active Listings</div>
+        </div>
+        <div>
+          <div class="stat-num">₹480Cr+</div>
+          <div class="stat-label">Deals Closed</div>
+        </div>
+        <div>
+          <div class="stat-num">18 States</div>
+          <div class="stat-label">Pan India</div>
+        </div>
+      </div>
+      {% endif %}
 
-      <div class="hero-float-card card-1">
+    </div><!-- end hero-text -->
+
+    <!-- RIGHT: Slider -->
+    <div class="hero-slider-wrap">
+      <div class="slider-frame" id="sliderFrame">
+
+        <!-- Slides populated by JS from lands data -->
+        <!-- Fallback slides if no land data -->
+        <div class="slide active" data-id="-1">
+          <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=700&q=80" alt="Land">
+          <div class="slide-overlay"></div>
+          <div class="slide-info">
+            <div>
+              <h4>Agricultural Land</h4>
+              <p>Nashik, Maharashtra</p>
+            </div>
+            <div class="slide-price">₹32L</div>
+          </div>
+          <div class="slide-redirect-hint">View Details →</div>
+        </div>
+
+      </div><!-- slider-frame -->
+
+      <!-- Dots -->
+      <div class="slide-dots" id="slideDots">
+        <div class="dot active" onclick="goSlide(0)"></div>
+      </div>
+
+      <!-- Arrows -->
+      <button class="slide-arrow prev" onclick="prevSlide()">‹</button>
+      <button class="slide-arrow next" onclick="nextSlide()">›</button>
+
+      <!-- Float cards -->
+      <div class="hero-float-card card-1" id="floatCard1">
         <div class="float-icon green">📍</div>
         <div class="float-text">
           <p>New Listing</p>
-          <p>Nashik, Maharashtra</p>
+          <p id="fc1Text">Loading…</p>
+        </div>
+      </div>
+      <div class="hero-float-card card-2" id="floatCard2">
+        <div class="float-icon amber">💰</div>
+        <div class="float-text">
+          <p>Latest Price</p>
+          <p id="fc2Text">Loading…</p>
         </div>
       </div>
 
-      <div class="hero-float-card card-2">
-        <div class="float-icon amber">💰</div>
-        <div class="float-text">
-          <p>Verified Deal</p>
-          <p>₹32L — Closed Today</p>
+    </div><!-- end slider-wrap -->
+
+  </div><!-- end hero-inner -->
+</section>
+
+<!-- ══════════════════════════════════════
+     SEARCH BAR
+══════════════════════════════════════ -->
+<div class="search-section">
+  <form action="/search" method="GET" class="search-card">
+    <div class="search-field" style="flex:3;">
+      <span class="sf-icon">📍</span>
+      <input type="text" name="location" placeholder="City, district, village…"
+             value="{{ request.args.get('location','') }}">
+    </div>
+    <div class="search-divider"></div>
+    <div class="search-field">
+      <span class="sf-icon">💰</span>
+      <input type="number" name="min_price" placeholder="Min Price (₹)">
+    </div>
+    <div class="search-divider"></div>
+    <div class="search-field">
+      <span class="sf-icon">💰</span>
+      <input type="number" name="max_price" placeholder="Max Price (₹)">
+    </div>
+    <div class="search-divider"></div>
+    <div class="search-field">
+      <span class="sf-icon">🏷</span>
+      <select name="land_type">
+        <option value="">Any Type</option>
+        <option value="Agriculture">Agriculture</option>
+        <option value="Residential">Residential</option>
+        <option value="Commercial">Commercial</option>
+      </select>
+    </div>
+    <button type="submit" class="btn-search">🔍 Search</button>
+  </form>
+</div>
+
+<!-- ══════════════════════════════════════
+     SELLER: MY LISTING QUICK VIEW
+══════════════════════════════════════ -->
+{% if session.get("purpose") == "sell" and seller_land %}
+<div class="my-listing-section show">
+  <div class="section-eyebrow">
+    <span class="eyebrow-pill">
+      <span class="listing-live-dot"></span> Your Active Listing
+    </span>
+  </div>
+  <h2 class="section-title">Your Land is <em>Live</em></h2>
+
+  <div class="my-land-card">
+    <div class="mlc-img">
+      <img src="{{ url_for('static', filename=seller_land.image) }}"
+           alt="{{ seller_land.title }}"
+           onerror="this.style.display='none';document.getElementById('mlcFb').style.display='flex';">
+      <div class="mlc-img-fb" id="mlcFb" style="display:none;">
+        <span>🌾</span><span>No image</span>
+      </div>
+      <div class="live-badge">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--green-accent);animation:livePulse 1.8s infinite;"></span>
+        Live
+      </div>
+    </div>
+    <div class="mlc-body">
+      <h3>{{ seller_land.title }}</h3>
+      <div class="mlc-meta">
+        <span class="m">📍 {{ seller_land.location }}</span>
+        {% if seller_land.area %}<span class="m">📐 {{ seller_land.area }} sq.ft</span>{% endif %}
+        {% if seller_land.land_type %}<span class="m">🏷 {{ seller_land.land_type }}</span>{% endif %}
+        <span class="m" style="color:{% if seller_land.legal_issue=='Yes' %}var(--red){% else %}var(--green-mid){% endif %};">
+          {% if seller_land.legal_issue == 'Yes' %}⚠️ Legal Issue{% else %}✅ Clear Title{% endif %}
+        </span>
+      </div>
+      <div class="mlc-price">₹{{ seller_land.price }}</div>
+
+      <!-- Quick stats -->
+      <div class="seller-stats-row">
+        <div class="seller-stat-box">
+          <div class="sb-num">{{ token_buyers|length if token_buyers else 0 }}</div>
+          <div class="sb-label">Token Buyers</div>
         </div>
+        <div class="seller-stat-box">
+          <div class="sb-num">—</div>
+          <div class="sb-label">Enquiries</div>
+        </div>
+        <div class="seller-stat-box">
+          <div class="sb-num">Live</div>
+          <div class="sb-label">Status</div>
+        </div>
+      </div>
+
+      <div class="mlc-actions">
+        <a href="/land/{{ seller_land.id if seller_land.id is defined else 0 }}" class="btn-sm-green">
+          👁 View Listing
+        </a>
+        <a href="/seller" class="btn-sm-ghost">✏️ Edit Listing</a>
+        {% if token_buyers and token_buyers|length > 0 %}
+        <a href="/my_bookings" class="btn-sm-ghost" style="border-color:var(--amber);color:var(--amber);">
+          🔔 {{ token_buyers|length }} Buyer{{ 's' if token_buyers|length>1 else '' }} Waiting
+        </a>
+        {% endif %}
       </div>
     </div>
   </div>
-</section>
+</div>
+{% endif %}
 
-<!-- ── SEARCH ── -->
+<!-- ══════════════════════════════════════
+     JS
+══════════════════════════════════════ -->
+<script>
+// ── Land data from Flask ──────────────────────────────────────
+const LANDS = {{ lands | tojson | safe }};
+const PURPOSE = "{{ session.get('purpose', '') }}";
+const IS_SELLER = PURPOSE === 'sell';
+const SELLER_PHONE = "{{ session.get('user','') }}";
+
+// ── HEADER SCROLL SHADOW ─────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('header').classList.toggle('scrolled', window.scrollY > 10);
+});
+
+// ── SAVED BADGE (buyer) ───────────────────────────────────────
+if (!IS_SELLER) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('landlink_saved') || '{}');
+    const cnt = Object.keys(saved).length;
+    const badge = document.getElementById('savedBadge');
+    if (badge && cnt > 0) { badge.textContent = cnt; badge.style.display = 'flex'; }
+  } catch(e) {}
+}
+
+// ── HERO SLIDER ──────────────────────────────────────────────
+let slides = [], currentSlide = 0, slideTimer;
+
+function buildSlider() {
+  const frame = document.getElementById('sliderFrame');
+  const dotsEl = document.getElementById('slideDots');
+
+  // Pick slides: for seller show only their land(s), for buyer/guest show recent listings
+  let pool = [];
+
+  if (LANDS && LANDS.length > 0) {
+    if (IS_SELLER) {
+      // Show only this seller's land if identifiable
+      pool = LANDS.slice(0, 3);
+    } else {
+      // Show latest 5 listings
+      pool = LANDS.slice(-5).reverse();
+    }
+  }
+
+  if (pool.length === 0) {
+    // Keep fallback slide, update float cards
+    updateFloatCards(null, null);
+    return;
+  }
+
+  // Clear frame
+  frame.innerHTML = '';
+  dotsEl.innerHTML = '';
+
+  pool.forEach((land, i) => {
+    const imgSrc = land.image ? `/static/${land.image}` : '';
+    const landId = land.id !== undefined ? land.id : LANDS.indexOf(land);
+
+    const slide = document.createElement('div');
+    slide.className = 'slide' + (i === 0 ? ' active' : '');
+    slide.dataset.id = landId;
+    slide.innerHTML = `
+      ${imgSrc
+        ? `<img src="${imgSrc}" alt="${land.title}"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+           <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;
+                       flex-direction:column;gap:8px;background:linear-gradient(135deg,#e8f5ed,#f0ede4);
+                       font-size:0.8rem;color:#4a5c4f;"><span style='font-size:3rem'>🌾</span>${land.title}</div>`
+        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+                       flex-direction:column;gap:8px;background:linear-gradient(135deg,#e8f5ed,#f0ede4);
+                       font-size:0.8rem;color:#4a5c4f;"><span style='font-size:3rem'>🌾</span>${land.title}</div>`
+      }
+      <div class="slide-overlay"></div>
+      <div class="slide-info">
+        <div>
+          <h4>${land.title}</h4>
+          <p>${land.location}${land.area ? ' · '+land.area+' sq.ft' : ''}</p>
+        </div>
+        <div class="slide-price">₹${land.price}</div>
+      </div>
+      <div class="slide-redirect-hint">View Details →</div>
+    `;
+    slide.addEventListener('click', () => {
+      window.location.href = `/land/${landId}`;
+    });
+    frame.appendChild(slide);
+
+    // Dot
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goSlide(i));
+    dotsEl.appendChild(dot);
+  });
+
+  slides = Array.from(frame.querySelectorAll('.slide'));
+
+  // Float cards
+  const newest = pool[0];
+  const priciest = [...pool].sort((a,b) => {
+    const pa = parseFloat(String(a.price||'0').replace(/[^0-9]/g,''));
+    const pb = parseFloat(String(b.price||'0').replace(/[^0-9]/g,''));
+    return pb - pa;
+  })[0];
+  updateFloatCards(newest, priciest);
+
+  startAutoSlide();
+}
+
+function updateFloatCards(newest, priciest) {
+  const fc1 = document.getElementById('fc1Text');
+  const fc2 = document.getElementById('fc2Text');
+  if (!fc1 || !fc2) return;
+
+  if (newest) {
+    fc1.textContent = newest.location || newest.title;
+    document.querySelector('#floatCard1 .float-text p:first-child').textContent =
+      IS_SELLER ? 'Your Listing' : 'New Listing';
+  } else {
+    fc1.textContent = 'Nashik, Maharashtra';
+  }
+
+  if (priciest) {
+    fc2.textContent = '₹' + priciest.price + ' — ' + (priciest.land_type || 'Land');
+    document.querySelector('#floatCard2 .float-text p:first-child').textContent = 'Top Listing';
+  } else {
+    fc2.textContent = '₹32L — Closed Today';
+  }
+
+  // For sellers: change card-2 to show token buyer info
+  if (IS_SELLER) {
+    const tokenCount = {{ token_buyers|length if token_buyers else 0 }};
+    if (tokenCount > 0) {
+      document.querySelector('#floatCard2 .float-icon').textContent = '🤝';
+      document.querySelector('#floatCard2 .float-icon').className = 'float-icon blue';
+      document.querySelector('#floatCard2 .float-text p:first-child').textContent = 'Token Paid';
+      fc2.textContent = tokenCount + ' Buyer' + (tokenCount > 1 ? 's' : '') + ' Interested';
+    }
+  }
+}
+
+function goSlide(n) {
+  if (!slides.length) return;
+  slides[currentSlide].classList.remove('active');
+  document.querySelectorAll('.dot')[currentSlide]?.classList.remove('active');
+  currentSlide = (n + slides.length) % slides.length;
+  slides[currentSlide].classList.add('active');
+  document.querySelectorAll('.dot')[currentSlide]?.classList.add('active');
+}
+
+function nextSlide() { goSlide(currentSlide + 1); resetAutoSlide(); }
+function prevSlide() { goSlide(currentSlide - 1); resetAutoSlide(); }
+
+function startAutoSlide() {
+  slideTimer = setInterval(() => goSlide(currentSlide + 1), 4500);
+}
+function resetAutoSlide() {
+  clearInterval(slideTimer);
+  startAutoSlide();
+}
+
+// Init
+buildSlider();
+</script>
+
+</body>
+</html>
+
+<!-- ── SEARCH ──
 <section class="search-section">
   <div class="search-card">
     <p>🔎 Search Available Plots</p>
@@ -1093,7 +2261,7 @@
       </div>
     </form>
   </div>
-</section>
+</section> -->
 
 <!-- ── FEATURES ── -->
 <section class="features-section fade-up">

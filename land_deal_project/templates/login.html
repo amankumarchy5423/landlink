@@ -359,7 +359,10 @@
     </div>
 
     <!-- Error message box -->
-    <div class="msg" id="msgBox"></div>
+    <!-- <div class="msg" id="msgBox"></div> -->
+     {% if error %}
+   <div class="msg error">{{ error }}</div>
+    {% endif %}
 
     <!-- ── LOGIN FORM ── -->
     <form method="POST" action="/login_user" id="loginForm">

@@ -1,170 +1,950 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Land Details</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LandLink — {{ land.title }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-body{
-font-family: Arial, sans-serif;
-margin:0;
-background:#f6f7fb;
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --green-deep:   #0d3320;
+  --green-mid:    #1a6b3c;
+  --green-bright: #22883f;
+  --green-accent: #34d068;
+  --cream:        #faf8f3;
+  --cream-dark:   #f0ede4;
+  --ink:          #111a14;
+  --ink-light:    #4a5c4f;
+  --border:       #e2ddd4;
+  --white:        #ffffff;
+  --red:          #dc2626;
+  --amber:        #d97706;
+  --purple:       #7c3aed;
 }
 
-.container{
-max-width:1100px;
-margin:auto;
-padding:20px;
+html { scroll-behavior:smooth; }
+body {
+  font-family:'DM Sans',sans-serif;
+  background:var(--cream); color:var(--ink);
+  min-height:100vh;
 }
 
-.top-bar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:15px;
+/* ── TOPBAR ── */
+.topbar {
+  position:sticky; top:0; z-index:300;
+  background:rgba(250,248,243,0.94);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  height:64px; padding:0 40px;
+  display:flex; align-items:center;
+  justify-content:space-between; gap:12px;
+}
+.brand { display:flex; align-items:center; gap:9px; text-decoration:none; }
+.brand-icon {
+  width:34px; height:34px; background:var(--green-mid);
+  border-radius:9px; display:flex; align-items:center;
+  justify-content:center; font-size:15px;
+}
+.brand h1 {
+  font-family:'Fraunces',serif; font-size:1.2rem;
+  font-weight:700; color:var(--ink);
+}
+.brand h1 span { color:var(--green-mid); }
+
+.topbar-right { display:flex; align-items:center; gap:9px; }
+.btn-outline {
+  display:flex; align-items:center; gap:6px;
+  padding:8px 15px; border:1.5px solid var(--border);
+  border-radius:10px; background:transparent;
+  font-family:'DM Sans',sans-serif; font-size:0.85rem;
+  font-weight:500; color:var(--ink-light);
+  text-decoration:none; cursor:pointer; transition:all 0.2s;
+}
+.btn-outline:hover { border-color:var(--green-mid); color:var(--green-mid); }
+
+/* ── HERO SECTION ── */
+.hero {
+  position:relative; width:100%;
+  height:clamp(280px,45vh,480px);
+  overflow:hidden; background:var(--cream-dark);
+}
+.hero img {
+  width:100%; height:100%; object-fit:cover;
+  display:block; transition:transform 6s ease;
+}
+.hero:hover img { transform:scale(1.04); }
+.hero-fallback {
+  width:100%; height:100%;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:10px; font-size:0.9rem; color:var(--ink-light);
+  background:linear-gradient(135deg,#e8f5ed,#f0ede4);
+}
+.hero-fallback span { font-size:4rem; }
+
+/* Hero overlays */
+.hero-overlay {
+  position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(13,51,32,0.65) 0%, transparent 55%);
+}
+.hero-title-block {
+  position:absolute; bottom:28px; left:36px; right:36px;
+  z-index:2;
+}
+.hero-title-block h2 {
+  font-family:'Fraunces',serif;
+  font-size:clamp(1.5rem,3vw,2.2rem);
+  font-weight:700; color:white; line-height:1.2;
+  text-shadow:0 2px 12px rgba(0,0,0,0.3);
+}
+.hero-title-block .hero-loc {
+  display:flex; align-items:center; gap:6px;
+  margin-top:6px; font-size:0.9rem;
+  color:rgba(255,255,255,0.82); font-weight:300;
 }
 
-.predict-btn{
-background:#16a34a;
-color:white;
-border:none;
-padding:8px 16px;
-border-radius:8px;
-cursor:pointer;
+/* Badges on hero */
+.hero-badges {
+  position:absolute; top:20px; left:20px;
+  display:flex; gap:8px; z-index:2;
+}
+.hbadge {
+  padding:5px 12px; border-radius:100px;
+  font-size:0.72rem; font-weight:700;
+  letter-spacing:0.04em; text-transform:uppercase;
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.25);
+}
+.hbadge.type-agri  { background:rgba(26,107,60,0.82); color:white; }
+.hbadge.type-resi  { background:rgba(37,99,235,0.82); color:white; }
+.hbadge.type-comm  { background:rgba(217,119,6,0.82);  color:white; }
+.hbadge.legal-warn { background:rgba(220,38,38,0.85);  color:white; }
+
+/* Save btn on hero */
+.hero-save {
+  position:absolute; top:16px; right:16px; z-index:2;
+  width:44px; height:44px;
+  background:rgba(255,255,255,0.9);
+  border:none; border-radius:50%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; backdrop-filter:blur(4px);
+  box-shadow:0 2px 12px rgba(0,0,0,0.15);
+  transition:all 0.2s;
+}
+.hero-save:hover { transform:scale(1.1); background:white; }
+.hero-save.saved { background:#fff0f0; }
+
+/* ── PAGE BODY ── */
+.page-wrap {
+  max-width:1120px; margin:0 auto;
+  padding:36px 24px 80px;
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:28px; align-items:start;
 }
 
-.predict-btn:hover{
-background:#15803d;
+/* ── CARD ── */
+.card {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:20px; overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,0.04);
+  animation:fadeUp 0.45s ease both;
+}
+.card + .card { animation-delay:0.07s; }
+.card-head {
+  padding:18px 22px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px;
+}
+.card-head-icon {
+  width:36px; height:36px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; flex-shrink:0;
+}
+.icon-green  { background:rgba(26,107,60,0.1); }
+.icon-blue   { background:rgba(37,99,235,0.1); }
+.icon-amber  { background:rgba(217,119,6,0.1); }
+.icon-purple { background:rgba(124,58,237,0.1); }
+
+.card-head h3 {
+  font-family:'Fraunces',serif; font-size:1rem;
+  font-weight:700; color:var(--ink);
+}
+.card-head p { font-size:0.78rem; color:var(--ink-light); margin-top:1px; }
+.card-body { padding:20px 22px; }
+
+/* ── SPEC GRID ── */
+.spec-grid {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.spec-item {
+  background:var(--cream); border:1px solid var(--border);
+  border-radius:12px; padding:12px 14px;
+}
+.spec-item .s-label {
+  font-size:0.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.05em;
+  color:var(--ink-light); margin-bottom:4px;
+}
+.spec-item .s-val {
+  font-size:0.95rem; font-weight:600; color:var(--ink);
+}
+.spec-item .s-val.price {
+  font-family:'Fraunces',serif; font-size:1.1rem;
+  color:var(--green-mid);
+}
+.spec-item .s-val.legal-ok   { color:var(--green-mid); }
+.spec-item .s-val.legal-warn { color:var(--red); }
+
+/* ── ADDRESS ── */
+.address-block {
+  display:flex; gap:10px; align-items:flex-start;
+  padding:14px; background:var(--cream);
+  border-radius:12px; border:1px solid var(--border);
+  margin-top:14px;
+}
+.address-block .addr-icon { font-size:1.3rem; flex-shrink:0; }
+.address-block p {
+  font-size:0.88rem; color:var(--ink-light);
+  line-height:1.6;
 }
 
-.card{
-background:white;
-padding:15px;
-border-radius:12px;
-box-shadow:0 2px 8px rgba(0,0,0,0.08);
+/* ── MAP ── */
+#map {
+  height:300px; width:100%;
+  border-radius:0 0 20px 20px;
+  display:block;
+}
+.map-actions {
+  display:flex; gap:8px; padding:12px 22px;
+  border-top:1px solid var(--border);
+}
+.btn-map-sm {
+  flex:1; padding:9px;
+  border:1.5px solid var(--border); border-radius:10px;
+  background:var(--cream); font-family:'DM Sans',sans-serif;
+  font-size:0.8rem; font-weight:600; color:var(--ink-light);
+  cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; justify-content:center; gap:5px;
+}
+.btn-map-sm:hover { border-color:var(--green-mid); color:var(--green-mid); }
+
+/* ── RIGHT COLUMN: PRICE CARD ── */
+.price-card {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:20px; overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,0.05);
+  position:sticky; top:76px;
+  animation:fadeUp 0.45s 0.1s ease both;
+}
+.price-card-head {
+  padding:20px 22px 16px;
+  background:linear-gradient(135deg,var(--green-deep),var(--green-mid));
+  position:relative; overflow:hidden;
+}
+.price-card-head::after {
+  content:''; position:absolute;
+  bottom:-30px; right:-30px;
+  width:120px; height:120px;
+  background:radial-gradient(circle,rgba(52,208,104,0.2) 0%,transparent 70%);
+  border-radius:50%;
+}
+.price-card-head .p-eyebrow {
+  font-size:0.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.07em;
+  color:rgba(255,255,255,0.6); margin-bottom:6px;
+}
+.price-card-head .p-price {
+  font-family:'Fraunces',serif; font-size:1.9rem;
+  font-weight:700; color:white; position:relative; z-index:1;
+}
+.price-card-head .p-area {
+  font-size:0.82rem; color:rgba(255,255,255,0.65);
+  margin-top:3px; position:relative; z-index:1;
 }
 
-.land-img{
-width:50%;
-height:350px;
-object-fit:cover;
-border-radius:10px;
-margin-top:10px;
+.price-card-body { padding:18px 20px; }
+
+/* Seller info */
+.seller-row {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px; background:var(--cream);
+  border:1px solid var(--border); border-radius:12px;
+  margin-bottom:14px;
+}
+.seller-avatar {
+  width:42px; height:42px;
+  background:linear-gradient(135deg,var(--green-mid),var(--green-accent));
+  border-radius:12px; display:flex; align-items:center;
+  justify-content:center; font-size:18px; flex-shrink:0;
+}
+.seller-info h4 {
+  font-size:0.88rem; font-weight:600; color:var(--ink);
+}
+.seller-info p {
+  font-size:0.75rem; color:var(--ink-light); margin-top:1px;
+}
+.seller-phone {
+  margin-left:auto; font-size:0.78rem;
+  font-weight:600; color:var(--green-mid);
+  background:rgba(26,107,60,0.08);
+  border:1px solid rgba(26,107,60,0.2);
+  padding:4px 9px; border-radius:8px;
 }
 
-#map{
-height:350px;
-margin-top:15px;
-border-radius:10px;
+/* Action buttons */
+.action-stack { display:flex; flex-direction:column; gap:9px; margin-bottom:14px; }
+
+.btn-primary {
+  width:100%; padding:13px;
+  background:linear-gradient(135deg,var(--green-mid),var(--green-bright));
+  color:white; border:none; border-radius:13px;
+  font-family:'DM Sans',sans-serif; font-size:0.95rem;
+  font-weight:700; cursor:pointer; transition:all 0.25s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow:0 4px 16px rgba(26,107,60,0.25);
+}
+.btn-primary:hover {
+  transform:translateY(-2px);
+  box-shadow:0 8px 28px rgba(26,107,60,0.35);
 }
 
-.price{
-color:#16a34a;
-font-weight:bold;
-font-size:20px;
+.btn-secondary {
+  width:100%; padding:11px;
+  background:var(--cream); border:1.5px solid var(--border);
+  border-radius:13px; font-family:'DM Sans',sans-serif;
+  font-size:0.9rem; font-weight:600; color:var(--ink-light);
+  cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn-secondary:hover { border-color:var(--green-mid); color:var(--green-mid); }
+.btn-secondary.saved-state {
+  background:rgba(26,107,60,0.07);
+  border-color:var(--green-mid); color:var(--green-mid);
 }
 
-.predict-panel{
-display:none;
-margin-top:15px;
-padding:15px;
-background:#f0fdf4;
-border-radius:10px;
+/* Trust badges */
+.trust-row {
+  display:flex; gap:7px; flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.t-badge {
+  display:flex; align-items:center; gap:4px;
+  padding:4px 9px; border-radius:8px;
+  background:var(--cream); border:1px solid var(--border);
+  font-size:0.7rem; font-weight:600; color:var(--ink-light);
 }
 
-input,select{
-padding:6px;
-margin-top:4px;
-margin-bottom:10px;
-width:200px;
+/* Share row */
+.share-row {
+  display:flex; gap:7px; padding-top:12px;
+  border-top:1px solid var(--border);
+}
+.share-btn {
+  flex:1; padding:8px;
+  border:1.5px solid var(--border); border-radius:10px;
+  background:var(--cream); font-size:0.75rem;
+  font-weight:600; color:var(--ink-light); cursor:pointer;
+  transition:all 0.2s; display:flex;
+  align-items:center; justify-content:center; gap:4px;
+}
+.share-btn:hover { border-color:var(--green-mid); color:var(--green-mid); }
+
+/* ── PREDICT PANEL ── */
+.predict-panel {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:20px; overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,0.05);
+  animation:fadeUp 0.45s 0.15s ease both;
+}
+.predict-head {
+  padding:18px 22px 14px;
+  background:linear-gradient(135deg,#4c1d95,#7c3aed);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.predict-head h3 {
+  font-family:'Fraunces',serif; font-size:1rem;
+  font-weight:700; color:white;
+}
+.predict-head p { font-size:0.75rem; color:rgba(255,255,255,0.7); margin-top:2px; }
+.soon-chip {
+  background:var(--amber); color:white;
+  font-size:0.65rem; font-weight:700;
+  padding:3px 8px; border-radius:100px;
+  letter-spacing:0.04em;
+}
+.predict-body { padding:18px 22px; }
+
+.predict-form { display:flex; flex-direction:column; gap:12px; }
+.pf-field label {
+  display:block; font-size:0.75rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.05em;
+  color:var(--ink-light); margin-bottom:5px;
+}
+.pf-field input, .pf-field select {
+  width:100%; padding:10px 12px;
+  border:1.5px solid var(--border); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:0.88rem;
+  color:var(--ink); background:var(--cream); outline:none;
+  transition:border-color 0.2s;
+}
+.pf-field input:focus, .pf-field select:focus {
+  border-color:var(--purple); background:var(--white);
+  box-shadow:0 0 0 3px rgba(124,58,237,0.08);
+}
+.pf-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.btn-predict {
+  width:100%; padding:12px;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  color:white; border:none; border-radius:11px;
+  font-family:'DM Sans',sans-serif; font-size:0.92rem;
+  font-weight:700; cursor:pointer; transition:all 0.25s;
+  display:flex; align-items:center; justify-content:center; gap:7px;
+  box-shadow:0 4px 16px rgba(124,58,237,0.25);
+}
+.btn-predict:hover {
+  transform:translateY(-2px);
+  box-shadow:0 8px 28px rgba(124,58,237,0.35);
+}
+
+/* Result */
+.predict-result {
+  margin-top:14px; padding:16px;
+  background:linear-gradient(135deg,rgba(124,58,237,0.07),rgba(168,85,247,0.04));
+  border:1px solid rgba(124,58,237,0.2);
+  border-radius:12px; display:none;
+}
+.predict-result.show { display:block; }
+.predict-result .pr-label {
+  font-size:0.75rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.05em; color:var(--purple); margin-bottom:4px;
+}
+.predict-result .pr-price {
+  font-family:'Fraunces',serif; font-size:1.5rem;
+  font-weight:700; color:var(--ink);
+}
+.predict-result .pr-note {
+  font-size:0.75rem; color:var(--ink-light);
+  margin-top:4px; line-height:1.5;
+}
+
+/* Coming soon state */
+.predict-coming {
+  text-align:center; padding:16px 10px;
+}
+.predict-coming .pc-icon { font-size:2.5rem; margin-bottom:8px; }
+.predict-coming p {
+  font-size:0.82rem; color:var(--ink-light); line-height:1.6;
+}
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:28px; left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:#1a1a1a; color:white;
+  padding:10px 18px; border-radius:11px;
+  font-size:0.86rem; font-weight:500;
+  box-shadow:0 8px 28px rgba(0,0,0,0.18);
+  opacity:0; pointer-events:none; z-index:9999;
+  transition:all 0.3s; white-space:nowrap;
+  display:flex; align-items:center; gap:7px;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.green  { background:var(--green-mid); }
+.toast.red    { background:var(--red); }
+.toast.purple { background:var(--purple); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width:860px) {
+  .page-wrap { grid-template-columns:1fr; }
+  .price-card { position:static; }
+  .topbar { padding:0 16px; }
+}
+@media (max-width:560px) {
+  .spec-grid { grid-template-columns:1fr; }
+  .hero-title-block { left:20px; right:20px; }
 }
 </style>
-
 </head>
-
 <body>
 
-<div class="container">
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="/" class="brand">
+    <div class="brand-icon">🌿</div>
+    <h1>Land<span>Link</span></h1>
+  </a>
+  <div class="topbar-right">
+    <a href="/search" class="btn-outline">← Search</a>
+    <a href="/" class="btn-outline">🏠 Home</a>
+    <a href="/saved" class="btn-outline">🔖 Saved</a>
+  </div>
+</nav>
 
-<div class="top-bar">
-<div>
-<h2>{{ land.title }}</h2>
-<p>{{ land.location }}</p>
-<p class="price">₹ {{ land.price }}</p>
+<!-- HERO -->
+<div class="hero">
+  <img src="{{ url_for('static', filename=land.image) }}"
+       alt="{{ land.title }}"
+       onerror="this.style.display='none'; document.getElementById('heroFb').style.display='flex';">
+  <div class="img-fallback hero-fallback" id="heroFb" style="display:none;">
+    <span>🌾</span><span>No image uploaded</span>
+  </div>
+  <div class="hero-overlay"></div>
+
+  <!-- Badges -->
+  <div class="hero-badges">
+    {% if land.land_type %}
+    {% set t = land.land_type | lower %}
+    <span class="hbadge {% if 'agri' in t %}type-agri{% elif 'resi' in t %}type-resi{% elif 'comm' in t %}type-comm{% else %}type-agri{% endif %}">
+      {{ land.land_type }}
+    </span>
+    {% endif %}
+    {% if land.legal_issue == 'Yes' %}
+    <span class="hbadge legal-warn">⚠️ Legal Issue</span>
+    {% endif %}
+  </div>
+
+  <!-- Save button -->
+  <button class="hero-save" id="heroSave" onclick="toggleSave()" title="Save this land">🔖</button>
+
+  <!-- Title overlay -->
+  <div class="hero-title-block">
+    <h2>{{ land.title }}</h2>
+    <div class="hero-loc">📍 {{ land.location }}{% if land.address %} · {{ land.address | truncate(60) }}{% endif %}</div>
+  </div>
 </div>
 
-<button class="predict-btn" onclick="togglePredict()">
-Predict Price
-</button>
-</div>
+<!-- PAGE BODY -->
+<div class="page-wrap">
 
-<div class="card">
-<img src="{{ url_for('static', filename=land.image) }}" class="land-img">
+  <!-- ── LEFT COLUMN ── -->
+  <div style="display:flex;flex-direction:column;gap:22px;">
 
-<div id="map"></div>
-</div>
+    <!-- Property Specs -->
+    <div class="card" style="animation-delay:0.02s;">
+      <div class="card-head">
+        <div class="card-head-icon icon-green">📋</div>
+        <div>
+          <h3>Property Details</h3>
+          <p>Key specs and information</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="spec-grid">
+          <div class="spec-item">
+            <div class="s-label">Listed Price</div>
+            <div class="s-val price">₹{{ land.price }}</div>
+          </div>
+          <div class="spec-item">
+            <div class="s-label">Land Area</div>
+            <div class="s-val">{{ land.area if land.area else '—' }} {% if land.area %}sq.ft{% endif %}</div>
+          </div>
+          <div class="spec-item">
+            <div class="s-label">Land Type</div>
+            <div class="s-val">{{ land.land_type if land.land_type else '—' }}</div>
+          </div>
+          <div class="spec-item">
+            <div class="s-label">Legal Status</div>
+            <div class="s-val {% if land.legal_issue == 'Yes' %}legal-warn{% else %}legal-ok{% endif %}">
+              {% if land.legal_issue == 'Yes' %}⚠️ Has Issues{% else %}✅ Clear{% endif %}
+            </div>
+          </div>
+          {% if land.lat and land.lng %}
+          <div class="spec-item">
+            <div class="s-label">Latitude</div>
+            <div class="s-val" style="font-family:monospace;font-size:0.85rem;">{{ land.lat }}</div>
+          </div>
+          <div class="spec-item">
+            <div class="s-label">Longitude</div>
+            <div class="s-val" style="font-family:monospace;font-size:0.85rem;">{{ land.lng }}</div>
+          </div>
+          {% endif %}
+        </div>
 
-<!-- Hidden ML Panel -->
-<div class="predict-panel" id="predictBox">
+        {% if land.address %}
+        <div class="address-block">
+          <div class="addr-icon">🏠</div>
+          <p>{{ land.address }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
 
-<form method="POST" action="/predict_price">
+    <!-- Map -->
+    <div class="card" style="animation-delay:0.08s;">
+      <div class="card-head">
+        <div class="card-head-icon icon-blue">🗺</div>
+        <div>
+          <h3>Land Location</h3>
+          <p>Satellite view · click marker for details</p>
+        </div>
+      </div>
+      <!-- Map layer toggle -->
+      <div style="padding:10px 22px 0;display:flex;gap:8px;">
+        <button class="btn-map-sm" id="satBtn" onclick="setLayer('sat')" style="border-color:var(--green-mid);color:var(--green-mid);">🛰 Satellite</button>
+        <button class="btn-map-sm" id="strBtn" onclick="setLayer('street')">🗺 Street</button>
+        <button class="btn-map-sm" onclick="map.setView([mapLat,mapLng],17)">🎯 Center</button>
+      </div>
+      <div id="map"></div>
+      <div class="map-actions">
+        <button class="btn-map-sm" onclick="openGmaps()">🔗 Open in Google Maps</button>
+        <button class="btn-map-sm" onclick="copyCoords()">📋 Copy Coords</button>
+      </div>
+    </div>
 
-<label>Area</label><br>
-<input type="number" name="area" required><br>
+    <!-- AI Price Predictor -->
+    <div class="predict-panel">
+      <div class="predict-head">
+        <div>
+          <h3>🤖 AI Price Predictor</h3>
+          <p>Get an estimated market value</p>
+        </div>
+        <span class="soon-chip">BETA</span>
+      </div>
+      <div class="predict-body">
 
-<label>Road Access</label><br>
-<select name="road">
-<option value="1">Yes</option>
-<option value="0">No</option>
-</select><br>
+        {% if predicted_price %}
+        <!-- Show result if already predicted -->
+        <div class="predict-result show">
+          <div class="pr-label">Estimated Market Value</div>
+          <div class="pr-price">₹{{ predicted_price }}</div>
+          <div class="pr-note">Based on area, road access, and distance from city. This is an AI estimate — actual price may vary.</div>
+        </div>
+        {% endif %}
 
-<label>Distance from City</label><br>
-<input type="number" name="distance" step="0.1" required><br>
+        <form method="POST" action="/predict_price" class="predict-form" id="predictForm">
+          <!-- Pass land id back -->
+          <input type="hidden" name="land_id" value="{{ land.id if land.id is defined else 0 }}">
 
-<button class="predict-btn" type="submit">Predict</button>
+          <div class="pf-row">
+            <div class="pf-field">
+              <label>Area (sq.ft) <span style="color:var(--red)">*</span></label>
+              <input type="number" name="area" placeholder="e.g. 5000"
+                     value="{{ land.area if land.area else '' }}" required>
+            </div>
+            <div class="pf-field">
+              <label>Dist. from City (km)</label>
+              <input type="number" name="distance" step="0.1" placeholder="e.g. 12">
+            </div>
+          </div>
 
-</form>
+          <div class="pf-row">
+            <div class="pf-field">
+              <label>Road Access</label>
+              <select name="road">
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+              </select>
+            </div>
+            <div class="pf-field">
+              <label>Land Type</label>
+              <select name="land_type_pred">
+                <option value="Agriculture" {% if land.land_type=='Agriculture' %}selected{% endif %}>Agriculture</option>
+                <option value="Residential" {% if land.land_type=='Residential' %}selected{% endif %}>Residential</option>
+                <option value="Commercial"  {% if land.land_type=='Commercial'  %}selected{% endif %}>Commercial</option>
+              </select>
+            </div>
+          </div>
 
-{% if predicted_price %}
-<h4>Estimated Price: ₹ {{ predicted_price }}</h4>
-{% endif %}
+          <button type="submit" class="btn-predict">🤖 Predict Price</button>
+        </form>
 
-</div>
+        <div class="predict-coming" style="margin-top:10px;">
+          <p style="font-size:0.75rem;color:#b0ab9f;">
+            🔬 Model trained on land records from 18 Indian states · Results are indicative only
+          </p>
+        </div>
+      </div>
+    </div>
 
-</div>
+  </div><!-- end left column -->
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- ── RIGHT COLUMN ── -->
+  <div style="display:flex;flex-direction:column;gap:22px;">
 
+    <!-- Price Card -->
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="p-eyebrow">Listed Price</div>
+        <div class="p-price">₹{{ land.price }}</div>
+        <div class="p-area">
+          {{ land.area if land.area else '—' }}{% if land.area %} sq.ft · {{ land.land_type or 'Land' }}{% endif %}
+        </div>
+      </div>
+
+      <div class="price-card-body">
+        <!-- Seller info -->
+        <div class="seller-row">
+          <div class="seller-avatar">🌿</div>
+          <div class="seller-info">
+            <h4>Verified Seller</h4>
+            <p>Listed on LandLink</p>
+          </div>
+          <div class="seller-phone">📞 Contact</div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="action-stack">
+          <button class="btn-primary" onclick="addToCart()">
+            🛒 Add to Cart
+          </button>
+          <button class="btn-secondary" id="saveBtn" onclick="toggleSave()">
+            🔖 Save for Later
+          </button>
+          <a href="/saved" class="btn-secondary" style="text-decoration:none;">
+            💳 Proceed to Payment →
+          </a>
+        </div>
+
+        <!-- Trust badges -->
+        <div class="trust-row">
+          <div class="t-badge">🔒 Secure</div>
+          <div class="t-badge">✅ Verified</div>
+          <div class="t-badge">📋 Legal Check</div>
+          <div class="t-badge">🤝 Assisted Sale</div>
+        </div>
+
+        <!-- Token info -->
+        <div style="background:rgba(26,107,60,0.05);border:1px solid rgba(26,107,60,0.15);
+                    border-radius:11px;padding:12px 14px;margin-bottom:12px;">
+          <div style="font-size:0.78rem;font-weight:700;color:var(--green-mid);margin-bottom:4px;">
+            💡 Token Amount Policy
+          </div>
+          <div style="font-size:0.75rem;color:var(--ink-light);line-height:1.6;">
+            Pay just 2% token to reserve this land for 7 days. Fully adjustable at final registration.
+          </div>
+        </div>
+
+        <!-- Share -->
+        <div class="share-row">
+          <button class="share-btn" onclick="shareLink()">🔗 Share</button>
+          <button class="share-btn" onclick="copyLink()">📋 Copy Link</button>
+          <button class="share-btn" onclick="shareWhatsApp()">💬 WhatsApp</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick info -->
+    <div class="card" style="animation-delay:0.12s;">
+      <div class="card-head">
+        <div class="card-head-icon icon-amber">ℹ️</div>
+        <div>
+          <h3>Important Notes</h3>
+          <p>Before you proceed</p>
+        </div>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+        {% for note in [
+          ('📑','Verify all documents at Sub-Registrar office before final payment.'),
+          ('🏦','Home loans available for plots from select banks.'),
+          ('⚖️','Consult a local lawyer for mutation and title verification.'),
+          ('📐','Actual area may vary — get a licensed surveyor measurement.'),
+          ('🌐','Check zoning/land use approval from local authority.')
+        ] %}
+        <div style="display:flex;gap:10px;font-size:0.82rem;color:var(--ink-light);line-height:1.5;">
+          <span style="font-size:1rem;flex-shrink:0;">{{ note[0] }}</span>
+          <span>{{ note[1] }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div><!-- end right column -->
+
+</div><!-- end page-wrap -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// ── MAP ────────────────────────────────────────────────────────
+const mapLat = {{ land.lat if land.lat else 20.5937 }};
+const mapLng = {{ land.lng if land.lng else 78.9629 }};
+const hasCoords = {{ 'true' if land.lat and land.lng else 'false' }};
 
-function togglePredict(){
-var box = document.getElementById("predictBox");
-box.style.display = box.style.display === "block" ? "none" : "block";
+const map = L.map('map', { zoomControl:false });
+L.control.zoom({ position:'bottomright' }).addTo(map);
+
+const satLayer = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom:20, attribution:'© Esri' }
+);
+const streetLayer = L.tileLayer(
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  { maxZoom:19, attribution:'© OpenStreetMap' }
+);
+satLayer.addTo(map);
+let currentLayer = 'sat';
+
+if (hasCoords) {
+  map.setView([mapLat, mapLng], 17);
+
+  // Custom marker
+  const icon = L.divIcon({
+    className:'',
+    html:`<div style="
+      width:34px;height:34px;
+      background:linear-gradient(135deg,#1a6b3c,#34d068);
+      border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+      border:3px solid white;
+      box-shadow:0 4px 14px rgba(0,0,0,0.3);
+    "></div>`,
+    iconSize:[34,34], iconAnchor:[17,34], popupAnchor:[0,-38]
+  });
+
+  const marker = L.marker([mapLat, mapLng], { icon }).addTo(map);
+  marker.bindPopup(`
+    <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;line-height:1.6;padding:4px 2px;max-width:180px;">
+      <strong>📍 {{ land.title }}</strong><br>
+      <span style="color:#4a5c4f;">{{ land.location }}</span><br>
+      <span style="color:#1a6b3c;font-weight:600;">₹{{ land.price }}</span>
+    </div>
+  `, { maxWidth:200 }).openPopup();
+
+  // Green circle overlay
+  L.circle([mapLat, mapLng], {
+    color:'#34d068', fillColor:'#34d068',
+    fillOpacity:0.1, weight:1.5, radius:100,
+    dashArray:'5,5'
+  }).addTo(map);
+
+} else {
+  map.setView([20.5937, 78.9629], 5);
+  map.on('load', () => {
+    document.getElementById('map').insertAdjacentHTML('afterend',
+      '<p style="text-align:center;font-size:0.82rem;color:#b0ab9f;padding:8px 0;">No coordinates available for this listing.</p>'
+    );
+  });
 }
 
-var lat = Number("{{ land.lat }}");
-var lng = Number("{{ land.lng }}");
-
-var map = L.map('map').setView([lat, lng], 17);
-
-L.tileLayer(
-'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-{
-maxZoom: 19
+function setLayer(l) {
+  if (l === currentLayer) return;
+  if (l === 'sat') {
+    map.removeLayer(streetLayer); satLayer.addTo(map);
+    document.getElementById('satBtn').style.borderColor = 'var(--green-mid)';
+    document.getElementById('satBtn').style.color = 'var(--green-mid)';
+    document.getElementById('strBtn').style.borderColor = '';
+    document.getElementById('strBtn').style.color = '';
+  } else {
+    map.removeLayer(satLayer); streetLayer.addTo(map);
+    document.getElementById('strBtn').style.borderColor = 'var(--green-mid)';
+    document.getElementById('strBtn').style.color = 'var(--green-mid)';
+    document.getElementById('satBtn').style.borderColor = '';
+    document.getElementById('satBtn').style.color = '';
+  }
+  currentLayer = l;
 }
-).addTo(map);
 
-L.marker([lat, lng]).addTo(map);
+function openGmaps() {
+  if (!hasCoords) { showToast('No coordinates available', 'red'); return; }
+  window.open(`https://maps.google.com/?q=${mapLat},${mapLng}`, '_blank');
+}
 
-L.circle([lat, lng], {
-color: 'green',
-fillColor: '#0f0',
-fillOpacity: 0.3,
-radius: 120
-}).addTo(map);
+function copyCoords() {
+  if (!hasCoords) { showToast('No coordinates available', 'red'); return; }
+  navigator.clipboard.writeText(`${mapLat}, ${mapLng}`);
+  showToast('📋 Coordinates copied!', 'green');
+}
 
+// ── SAVE / CART ────────────────────────────────────────────────
+const SAVE_KEY = 'landlink_saved';
+const LAND_ID  = '{{ land.id if land.id is defined else loop.index0 }}';
+const LAND_DATA = {
+  id:        LAND_ID,
+  title:     '{{ land.title | replace("'","") }}',
+  location:  '{{ land.location | replace("'","") }}',
+  price:     '{{ land.price }}',
+  image:     '{{ land.image }}',
+  area:      '{{ land.area if land.area else "" }}',
+  land_type: '{{ land.land_type if land.land_type else "" }}',
+  legal_issue:'{{ land.legal_issue if land.legal_issue else "No" }}'
+};
+
+function getSaved() {
+  try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; }
+  catch { return {}; }
+}
+function setSaved(obj) { localStorage.setItem(SAVE_KEY, JSON.stringify(obj)); }
+
+function toggleSave() {
+  const saved = getSaved();
+  const isSaved = !!saved[LAND_ID];
+
+  if (isSaved) {
+    delete saved[LAND_ID];
+    setSaved(saved);
+    updateSaveUI(false);
+    showToast('Removed from saved', '');
+  } else {
+    saved[LAND_ID] = LAND_DATA;
+    setSaved(saved);
+    updateSaveUI(true);
+    showToast('✅ Saved to your list!', 'green');
+  }
+}
+
+function updateSaveUI(isSaved) {
+  const heroBtn = document.getElementById('heroSave');
+  const sideBtn = document.getElementById('saveBtn');
+  if (heroBtn) { heroBtn.textContent = isSaved ? '❤️' : '🔖'; heroBtn.classList.toggle('saved', isSaved); }
+  if (sideBtn) {
+    sideBtn.textContent = isSaved ? '❤️ Saved' : '🔖 Save for Later';
+    sideBtn.classList.toggle('saved-state', isSaved);
+  }
+}
+
+function addToCart() {
+  const saved = getSaved();
+  saved[LAND_ID] = LAND_DATA;
+  setSaved(saved);
+  updateSaveUI(true);
+  showToast('🛒 Added to cart!', 'green');
+  // bounce the button
+  setTimeout(() => window.location.href = '/saved', 900);
+}
+
+// ── SHARE ──────────────────────────────────────────────────────
+function shareLink() {
+  if (navigator.share) {
+    navigator.share({ title:'{{ land.title }}', url: window.location.href });
+  } else { copyLink(); }
+}
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href);
+  showToast('📋 Link copied!', 'green');
+}
+function shareWhatsApp() {
+  const msg = encodeURIComponent('Check out this land on LandLink: {{ land.title }} — ₹{{ land.price }}\n' + window.location.href);
+  window.open('https://wa.me/?text=' + msg, '_blank');
+}
+
+// ── INIT SAVE STATE ────────────────────────────────────────────
+(function() {
+  const saved = getSaved();
+  if (saved[LAND_ID]) updateSaveUI(true);
+})();
+
+// ── TOAST ──────────────────────────────────────────────────────
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.className = 'toast', 3200);
+}
 </script>
-
 </body>
 </html>

@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LandLink — My Saved Lands</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --green-deep:   #0d3320;
+  --green-mid:    #1a6b3c;
+  --green-bright: #22883f;
+  --green-accent: #34d068;
+  --cream:        #faf8f3;
+  --cream-dark:   #f0ede4;
+  --ink:          #111a14;
+  --ink-light:    #4a5c4f;
+  --border:       #e2ddd4;
+  --white:        #ffffff;
+  --red:          #dc2626;
+  --amber:        #d97706;
+  --blue:         #2563eb;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top:0; z-index:200;
+  background: rgba(250,248,243,0.94);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  height: 64px; padding: 0 40px;
+  display: flex; align-items: center;
+  justify-content: space-between;
+}
+.brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.brand-icon {
+  width:36px; height:36px; background:var(--green-mid);
+  border-radius:10px; display:flex; align-items:center;
+  justify-content:center; font-size:16px;
+}
+.brand h1 {
+  font-family:'Fraunces',serif; font-size:1.3rem;
+  font-weight:700; color:var(--ink);
+}
+.brand h1 span { color:var(--green-mid); }
+
+.topbar-right { display:flex; align-items:center; gap:12px; }
+
+.btn-back {
+  display:flex; align-items:center; gap:7px;
+  padding:9px 16px;
+  border:1.5px solid var(--border); border-radius:11px;
+  background:transparent; font-family:'DM Sans',sans-serif;
+  font-size:0.88rem; font-weight:500; color:var(--ink-light);
+  text-decoration:none; cursor:pointer; transition:all 0.2s;
+}
+.btn-back:hover { border-color:var(--ink-light); color:var(--ink); }
+
+/* ── PAGE ── */
+.page-wrap {
+  max-width:1120px; margin:0 auto;
+  padding: 44px 24px 100px;
+}
+
+/* ── HEADER ── */
+.page-header {
+  display:flex; align-items:flex-end;
+  justify-content:space-between; gap:16px;
+  margin-bottom:36px; flex-wrap:wrap;
+}
+.page-header .left .eyebrow {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(52,208,104,0.1);
+  border:1px solid rgba(52,208,104,0.25);
+  color:var(--green-mid); font-size:0.75rem;
+  font-weight:600; letter-spacing:0.05em;
+  text-transform:uppercase; padding:4px 11px;
+  border-radius:100px; margin-bottom:10px;
+}
+.page-header .left h2 {
+  font-family:'Fraunces',serif;
+  font-size:clamp(1.7rem,2.8vw,2.3rem);
+  font-weight:700; color:var(--ink); line-height:1.2;
+}
+.page-header .left h2 em { font-style:italic; color:var(--green-mid); }
+.page-header .left p {
+  margin-top:6px; font-size:0.9rem;
+  color:var(--ink-light); font-weight:300;
+}
+.btn-clear-all {
+  padding:9px 18px; border:1.5px solid #fca5a5;
+  border-radius:11px; background:#fff5f5;
+  font-family:'DM Sans',sans-serif; font-size:0.85rem;
+  font-weight:600; color:var(--red); cursor:pointer;
+  transition:all 0.2s;
+}
+.btn-clear-all:hover { background:#fee2e2; }
+
+/* ── TWO-COL LAYOUT ── */
+.layout { display:grid; grid-template-columns:1fr 380px; gap:28px; align-items:start; }
+
+/* ── LAND LIST ── */
+.land-list { display:flex; flex-direction:column; gap:16px; }
+
+.land-item {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:18px; overflow:hidden;
+  display:flex; gap:0;
+  transition:box-shadow 0.25s, transform 0.25s;
+  animation: fadeUp 0.45s ease both;
+  position:relative;
+}
+.land-item:hover {
+  box-shadow:0 10px 36px rgba(0,0,0,0.08);
+  transform:translateY(-2px);
+}
+
+.land-item:nth-child(1) { animation-delay:0.04s; }
+.land-item:nth-child(2) { animation-delay:0.08s; }
+.land-item:nth-child(3) { animation-delay:0.12s; }
+.land-item:nth-child(4) { animation-delay:0.16s; }
+
+/* Checkbox select */
+.item-check {
+  display:flex; align-items:center; justify-content:center;
+  padding:0 16px;
+  background:var(--cream);
+  border-right:1px solid var(--border);
+  flex-shrink:0;
+}
+.item-check input[type="checkbox"] {
+  width:18px; height:18px;
+  accent-color:var(--green-mid); cursor:pointer;
+}
+
+.item-img {
+  width:140px; flex-shrink:0;
+  position:relative; overflow:hidden;
+}
+.item-img img {
+  width:100%; height:100%; object-fit:cover;
+  display:block; transition:transform 0.4s;
+}
+.land-item:hover .item-img img { transform:scale(1.06); }
+.item-img .img-fb {
+  width:100%; height:100%; min-height:120px;
+  display:none; align-items:center; justify-content:center;
+  flex-direction:column; gap:4px; font-size:0.75rem;
+  color:var(--ink-light);
+  background:linear-gradient(135deg,#e8f5ed,#f0ede4);
+}
+.item-img .img-fb span { font-size:2rem; }
+
+.type-chip {
+  position:absolute; top:8px; left:8px;
+  font-size:0.65rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.04em;
+  padding:3px 8px; border-radius:100px; color:white;
+}
+.type-chip.agri  { background:rgba(26,107,60,0.85); }
+.type-chip.resi  { background:rgba(37,99,235,0.85); }
+.type-chip.comm  { background:rgba(217,119,6,0.85); }
+.type-chip.other { background:rgba(0,0,0,0.5); }
+
+.item-body {
+  flex:1; padding:18px 20px;
+  display:flex; flex-direction:column; gap:8px;
+  min-width:0;
+}
+.item-body h3 {
+  font-family:'Fraunces',serif; font-size:1.05rem;
+  font-weight:700; color:var(--ink); line-height:1.3;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.item-meta { display:flex; flex-wrap:wrap; gap:10px; }
+.item-meta .m {
+  display:flex; align-items:center; gap:4px;
+  font-size:0.8rem; color:var(--ink-light);
+}
+.item-price {
+  font-family:'Fraunces',serif; font-size:1.2rem;
+  font-weight:700; color:var(--green-mid); margin-top:auto;
+}
+.item-price small {
+  font-family:'DM Sans',sans-serif; font-size:0.72rem;
+  font-weight:300; color:var(--ink-light); margin-left:4px;
+}
+
+.item-actions {
+  display:flex; align-items:center; gap:8px; margin-top:6px;
+}
+.btn-view-sm {
+  padding:7px 14px; background:var(--green-mid); color:white;
+  border:none; border-radius:9px; font-family:'DM Sans',sans-serif;
+  font-size:0.82rem; font-weight:600; text-decoration:none;
+  cursor:pointer; transition:background 0.2s;
+}
+.btn-view-sm:hover { background:var(--green-bright); }
+.btn-remove-item {
+  padding:7px 12px; background:transparent;
+  border:1.5px solid #fca5a5; border-radius:9px;
+  font-family:'DM Sans',sans-serif; font-size:0.82rem;
+  font-weight:600; color:var(--red); cursor:pointer;
+  transition:all 0.2s;
+}
+.btn-remove-item:hover { background:#fee2e2; }
+
+/* legal warning on card */
+.legal-warn {
+  position:absolute; top:10px; right:10px;
+  background:#fef3c7; border:1px solid #fcd34d;
+  border-radius:8px; padding:4px 8px;
+  font-size:0.7rem; font-weight:600; color:#92400e;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:20px; padding:80px 40px; text-align:center;
+}
+.empty-state .eicon { font-size:4rem; margin-bottom:16px; }
+.empty-state h3 {
+  font-family:'Fraunces',serif; font-size:1.5rem;
+  font-weight:700; color:var(--ink); margin-bottom:8px;
+}
+.empty-state p {
+  font-size:0.92rem; color:var(--ink-light);
+  font-weight:300; margin-bottom:24px;
+}
+.btn-go-search {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:12px 24px; background:var(--green-mid);
+  color:white; border-radius:12px; text-decoration:none;
+  font-weight:600; font-size:0.9rem; transition:background 0.2s;
+}
+.btn-go-search:hover { background:var(--green-bright); }
+
+/* ── ORDER SUMMARY CARD ── */
+.summary-card {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:20px; overflow:hidden;
+  position:sticky; top:80px;
+  animation: fadeUp 0.5s 0.1s ease both;
+}
+
+.summary-head {
+  padding:20px 24px 16px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,var(--green-deep),var(--green-mid));
+  position:relative; overflow:hidden;
+}
+.summary-head::after {
+  content:'';
+  position:absolute; bottom:-30px; right:-30px;
+  width:120px; height:120px;
+  background:radial-gradient(circle,rgba(52,208,104,0.2) 0%,transparent 70%);
+  border-radius:50%;
+}
+.summary-head h3 {
+  font-family:'Fraunces',serif; font-size:1.15rem;
+  font-weight:700; color:white; position:relative; z-index:1;
+}
+.summary-head p {
+  font-size:0.8rem; color:rgba(255,255,255,0.65);
+  margin-top:3px; position:relative; z-index:1;
+}
+
+.summary-body { padding:20px 24px; }
+
+.summary-lines { display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+.s-line {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:0.87rem;
+}
+.s-line .s-label { color:var(--ink-light); }
+.s-line .s-val { font-weight:600; color:var(--ink); }
+.s-line.total {
+  padding-top:12px; border-top:2px dashed var(--border);
+  margin-top:4px;
+}
+.s-line.total .s-label {
+  font-family:'Fraunces',serif; font-size:1rem;
+  font-weight:700; color:var(--ink);
+}
+.s-line.total .s-val {
+  font-family:'Fraunces',serif; font-size:1.2rem;
+  font-weight:700; color:var(--green-mid);
+}
+
+/* Trust badges */
+.trust-row {
+  display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;
+}
+.trust-badge {
+  display:flex; align-items:center; gap:5px;
+  padding:5px 10px; border-radius:8px;
+  background:var(--cream); border:1px solid var(--border);
+  font-size:0.72rem; font-weight:600; color:var(--ink-light);
+}
+
+/* ── PAYMENT SECTION ── */
+.payment-section { padding:0 24px 24px; }
+
+.payment-title {
+  font-size:0.8rem; font-weight:700; color:var(--ink-light);
+  text-transform:uppercase; letter-spacing:0.06em;
+  margin-bottom:12px;
+}
+
+.pay-methods {
+  display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  margin-bottom:14px;
+}
+.pay-method {
+  position:relative;
+}
+.pay-method input[type="radio"] {
+  position:absolute; opacity:0; width:0; height:0;
+}
+.pay-method label {
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:4px;
+  padding:12px 10px; border:1.5px solid var(--border);
+  border-radius:12px; cursor:pointer; font-size:0.78rem;
+  font-weight:600; color:var(--ink-light);
+  background:var(--cream); transition:all 0.2s;
+  text-align:center;
+}
+.pay-method label .pm-icon { font-size:1.4rem; }
+.pay-method input[type="radio"]:checked + label {
+  border-color:var(--green-mid);
+  background:rgba(26,107,60,0.07);
+  color:var(--green-mid);
+}
+
+/* Payment details panels */
+.pay-panel { display:none; margin-bottom:14px; }
+.pay-panel.active { display:block; }
+
+.pay-field { margin-bottom:12px; }
+.pay-field label {
+  display:block; font-size:0.78rem; font-weight:600;
+  color:var(--ink-light); text-transform:uppercase;
+  letter-spacing:0.04em; margin-bottom:6px;
+}
+.pay-field input, .pay-field select {
+  width:100%; padding:11px 13px;
+  border:1.5px solid var(--border); border-radius:11px;
+  font-family:'DM Sans',sans-serif; font-size:0.9rem;
+  color:var(--ink); background:var(--white); outline:none;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+.pay-field input:focus, .pay-field select:focus {
+  border-color:var(--green-mid);
+  box-shadow:0 0 0 3px rgba(26,107,60,0.08);
+}
+.pay-field input::placeholder { color:#b0ab9f; }
+
+.card-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+.upi-display {
+  background:var(--cream); border:1.5px dashed var(--border);
+  border-radius:12px; padding:16px; text-align:center;
+}
+.upi-display .upi-id {
+  font-family:'Fraunces',serif; font-size:1.1rem;
+  font-weight:700; color:var(--green-mid); margin-bottom:4px;
+}
+.upi-display p { font-size:0.78rem; color:var(--ink-light); }
+
+/* Token amount info */
+.token-info {
+  background:linear-gradient(135deg,rgba(52,208,104,0.08),rgba(26,107,60,0.04));
+  border:1px solid rgba(52,208,104,0.25);
+  border-radius:12px; padding:14px 16px;
+  margin-bottom:14px;
+}
+.token-info h4 {
+  font-size:0.85rem; font-weight:700;
+  color:var(--green-mid); margin-bottom:4px;
+}
+.token-info p { font-size:0.78rem; color:var(--ink-light); line-height:1.5; }
+
+/* Submit pay btn */
+.btn-pay {
+  width:100%; padding:14px;
+  background:linear-gradient(135deg,var(--green-mid),var(--green-bright));
+  color:white; border:none; border-radius:13px;
+  font-family:'DM Sans',sans-serif; font-size:1rem;
+  font-weight:700; cursor:pointer;
+  transition:all 0.25s; display:flex;
+  align-items:center; justify-content:center; gap:8px;
+  box-shadow:0 4px 20px rgba(26,107,60,0.25);
+}
+.btn-pay:hover {
+  transform:translateY(-2px);
+  box-shadow:0 8px 32px rgba(26,107,60,0.35);
+}
+.btn-pay:active { transform:translateY(0); }
+.btn-pay:disabled {
+  background:#ccc; cursor:not-allowed;
+  box-shadow:none; transform:none;
+}
+
+.pay-note {
+  text-align:center; font-size:0.75rem;
+  color:var(--ink-light); margin-top:10px;
+  display:flex; align-items:center; justify-content:center; gap:4px;
+}
+
+/* ── SUCCESS MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.5); z-index:999;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.3s; backdrop-filter:blur(6px);
+}
+.modal-overlay.open { opacity:1; pointer-events:all; }
+
+.modal {
+  background:var(--white); border-radius:24px;
+  padding:40px 36px; max-width:440px; width:90%;
+  text-align:center;
+  transform:scale(0.9) translateY(20px);
+  transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow:0 24px 80px rgba(0,0,0,0.18);
+}
+.modal-overlay.open .modal { transform:scale(1) translateY(0); }
+
+.modal-icon {
+  width:72px; height:72px; border-radius:50%;
+  background:linear-gradient(135deg,var(--green-mid),var(--green-accent));
+  display:flex; align-items:center; justify-content:center;
+  font-size:2rem; margin:0 auto 20px;
+  box-shadow:0 8px 24px rgba(26,107,60,0.3);
+}
+.modal h3 {
+  font-family:'Fraunces',serif; font-size:1.6rem;
+  font-weight:700; color:var(--ink); margin-bottom:8px;
+}
+.modal p {
+  font-size:0.92rem; color:var(--ink-light);
+  line-height:1.6; margin-bottom:8px;
+}
+.modal .ref-num {
+  display:inline-block;
+  background:var(--cream); border:1px solid var(--border);
+  border-radius:8px; padding:6px 14px;
+  font-family:monospace; font-size:0.85rem;
+  color:var(--green-mid); font-weight:600;
+  margin:8px 0 20px;
+}
+.modal-steps {
+  text-align:left; background:var(--cream);
+  border-radius:14px; padding:16px 18px;
+  margin-bottom:24px;
+}
+.modal-steps h4 {
+  font-size:0.82rem; font-weight:700;
+  color:var(--ink-light); text-transform:uppercase;
+  letter-spacing:0.05em; margin-bottom:10px;
+}
+.modal-step {
+  display:flex; align-items:flex-start; gap:10px;
+  font-size:0.83rem; color:var(--ink-light);
+  margin-bottom:8px; line-height:1.4;
+}
+.modal-step:last-child { margin-bottom:0; }
+.step-dot {
+  width:20px; height:20px; flex-shrink:0;
+  background:var(--green-mid); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.65rem; font-weight:700; color:white;
+}
+.btn-modal-close {
+  width:100%; padding:13px;
+  background:var(--green-mid); color:white;
+  border:none; border-radius:13px; font-family:'DM Sans',sans-serif;
+  font-size:0.95rem; font-weight:600; cursor:pointer;
+  transition:background 0.2s;
+}
+.btn-modal-close:hover { background:var(--green-bright); }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:28px; left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:#1a1a1a; color:white; padding:11px 20px;
+  border-radius:12px; font-size:0.88rem; font-weight:500;
+  box-shadow:0 8px 32px rgba(0,0,0,0.2); opacity:0;
+  pointer-events:none; z-index:9999; transition:all 0.3s;
+  white-space:nowrap; display:flex; align-items:center; gap:8px;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.green { background:var(--green-mid); }
+.toast.red   { background:var(--red); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width:900px) {
+  .layout { grid-template-columns:1fr; }
+  .summary-card { position:static; }
+  .topbar { padding:0 16px; }
+  .page-wrap { padding:28px 16px 60px; }
+}
+@media (max-width:560px) {
+  .item-img { width:100px; }
+  .pay-methods { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="/" class="brand">
+    <div class="brand-icon">🌿</div>
+    <h1>Land<span>Link</span></h1>
+  </a>
+  <div class="topbar-right">
+    <a href="/search" class="btn-back">← Back to Search</a>
+    <a href="/" class="btn-back">🏠 Home</a>
+  </div>
+</nav>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="modal-icon">✅</div>
+    <h3>Token Amount Paid!</h3>
+    <p>Your booking request has been submitted successfully. Reference number:</p>
+    <div class="ref-num" id="refNum">LL-000000</div>
+    <div class="modal-steps">
+      <h4>What happens next?</h4>
+      <div class="modal-step"><div class="step-dot">1</div><span>Seller will be notified and will contact you within 24 hours.</span></div>
+      <div class="modal-step"><div class="step-dot">2</div><span>Our team verifies land documents and legal status.</span></div>
+      <div class="modal-step"><div class="step-dot">3</div><span>Site visit is scheduled at your convenience.</span></div>
+      <div class="modal-step"><div class="step-dot">4</div><span>Final registration and transfer at Sub-Registrar office.</span></div>
+    </div>
+    <button class="btn-modal-close" onclick="window.location.href='/'">Go to Home →</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- PAGE -->
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="left">
+      <div class="eyebrow">❤️ My Wishlist</div>
+      <h2>Saved <em>Lands</em></h2>
+      <p id="headerSubtitle">Loading your saved properties…</p>
+    </div>
+    <button class="btn-clear-all" onclick="clearAll()" id="clearAllBtn" style="display:none;">
+      🗑 Clear All
+    </button>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="layout" id="mainLayout">
+
+    <!-- LEFT: Land List -->
+    <div class="land-list" id="landList">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- RIGHT: Order Summary -->
+    <div class="summary-card" id="summaryCard" style="display:none;">
+
+      <div class="summary-head">
+        <h3>Order Summary</h3>
+        <p id="summarySubtitle">0 properties selected</p>
+      </div>
+
+      <div class="summary-body">
+        <div class="summary-lines">
+          <div class="s-line">
+            <span class="s-label">Selected Properties</span>
+            <span class="s-val" id="selCount">0</span>
+          </div>
+          <div class="s-line">
+            <span class="s-label">Total Land Value</span>
+            <span class="s-val" id="totalVal">₹0</span>
+          </div>
+          <div class="s-line">
+            <span class="s-label">Token Amount (2%)</span>
+            <span class="s-val" id="tokenAmt">₹0</span>
+          </div>
+          <div class="s-line">
+            <span class="s-label">Platform Fee</span>
+            <span class="s-val">₹999</span>
+          </div>
+          <div class="s-line total">
+            <span class="s-label">Pay Now</span>
+            <span class="s-val" id="payNow">₹999</span>
+          </div>
+        </div>
+
+        <!-- Trust badges -->
+        <div class="trust-row">
+          <div class="trust-badge">🔒 Secure</div>
+          <div class="trust-badge">✅ Verified</div>
+          <div class="trust-badge">📋 Legal Check</div>
+          <div class="trust-badge">🤝 Assisted</div>
+        </div>
+
+        <!-- Token info -->
+        <div class="token-info">
+          <h4>💡 What is Token Amount?</h4>
+          <p>Token amount (2% of land value) reserves the land for you for 7 days while documents are verified. It is fully adjustable against the final sale price.</p>
+        </div>
+      </div>
+
+      <!-- Payment -->
+      <div class="payment-section">
+        <div class="payment-title">Choose Payment Method</div>
+
+        <div class="pay-methods">
+          <div class="pay-method">
+            <input type="radio" name="payMethod" id="pm_upi" value="upi" checked onchange="showPanel('upi')">
+            <label for="pm_upi"><span class="pm-icon">📱</span>UPI</label>
+          </div>
+          <div class="pay-method">
+            <input type="radio" name="payMethod" id="pm_card" value="card" onchange="showPanel('card')">
+            <label for="pm_card"><span class="pm-icon">💳</span>Card</label>
+          </div>
+          <div class="pay-method">
+            <input type="radio" name="payMethod" id="pm_nb" value="netbanking" onchange="showPanel('netbanking')">
+            <label for="pm_nb"><span class="pm-icon">🏦</span>Net Banking</label>
+          </div>
+          <div class="pay-method">
+            <input type="radio" name="payMethod" id="pm_emi" value="emi" onchange="showPanel('emi')">
+            <label for="pm_emi"><span class="pm-icon">📅</span>EMI</label>
+          </div>
+        </div>
+
+        <!-- UPI Panel -->
+        <div class="pay-panel active" id="panel_upi">
+          <div class="pay-field">
+            <label>UPI ID</label>
+            <input type="text" id="upiId" placeholder="yourname@upi">
+          </div>
+          <div class="upi-display">
+            <div class="upi-id">landlink@upi</div>
+            <p>Or scan QR code at the payment counter</p>
+          </div>
+        </div>
+
+        <!-- Card Panel -->
+        <div class="pay-panel" id="panel_card">
+          <div class="pay-field">
+            <label>Card Number</label>
+            <input type="text" id="cardNum" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)">
+          </div>
+          <div class="pay-field">
+            <label>Cardholder Name</label>
+            <input type="text" placeholder="As on card">
+          </div>
+          <div class="card-row">
+            <div class="pay-field">
+              <label>Expiry</label>
+              <input type="text" placeholder="MM / YY" maxlength="7">
+            </div>
+            <div class="pay-field">
+              <label>CVV</label>
+              <input type="password" placeholder="•••" maxlength="3">
+            </div>
+          </div>
+        </div>
+
+        <!-- Net Banking Panel -->
+        <div class="pay-panel" id="panel_netbanking">
+          <div class="pay-field">
+            <label>Select Bank</label>
+            <select>
+              <option value="">-- Choose Bank --</option>
+              <option>State Bank of India</option>
+              <option>HDFC Bank</option>
+              <option>ICICI Bank</option>
+              <option>Axis Bank</option>
+              <option>Kotak Mahindra Bank</option>
+              <option>Bank of Baroda</option>
+              <option>Punjab National Bank</option>
+              <option>Canara Bank</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- EMI Panel -->
+        <div class="pay-panel" id="panel_emi">
+          <div class="pay-field">
+            <label>Select EMI Plan</label>
+            <select>
+              <option value="">-- Choose Tenure --</option>
+              <option>3 months (0% interest)</option>
+              <option>6 months (1.5% interest)</option>
+              <option>12 months (2.5% interest)</option>
+              <option>24 months (3.5% interest)</option>
+            </select>
+          </div>
+          <div class="pay-field">
+            <label>Card / Bank Account</label>
+            <input type="text" placeholder="Last 4 digits of card">
+          </div>
+        </div>
+
+        <button class="btn-pay" id="payBtn" onclick="processPayment()" disabled>
+          🔒 Pay Token Amount
+        </button>
+
+        <div class="pay-note">
+          🔐 256-bit SSL encrypted · Powered by LandLink Pay
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end layout -->
+
+</div><!-- end page-wrap -->
+
+<script>
+const SAVE_KEY = 'landlink_saved';
+
+function getSaved() {
+  try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; }
+  catch { return {}; }
+}
+function setSaved(obj) {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(obj));
+}
+
+// ── RENDER LAND LIST ──────────────────────────────────────────
+function renderList() {
+  const saved = getSaved();
+  const keys  = Object.keys(saved);
+  const list  = document.getElementById('landList');
+
+  // Header subtitle
+  document.getElementById('headerSubtitle').textContent =
+    keys.length ? `${keys.length} propert${keys.length===1?'y':'ies'} saved` : 'Your wishlist is empty';
+
+  // Clear all btn
+  document.getElementById('clearAllBtn').style.display = keys.length ? '' : 'none';
+
+  // Summary card visibility
+  document.getElementById('summaryCard').style.display = keys.length ? '' : 'none';
+
+  if (keys.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="eicon">💔</div>
+        <h3>No Saved Lands</h3>
+        <p>You haven't saved any lands yet. Browse listings and hit the bookmark icon to save properties here.</p>
+        <a href="/search" class="btn-go-search">🔍 Search Lands →</a>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = keys.map(k => {
+    const item = saved[k];
+    const imgSrc = item.image ? `/static/${item.image}` : '';
+    const priceNum = parseFloat(String(item.price||'0').replace(/[^0-9.]/g,'')) || 0;
+    const typeClass = getTypeClass(item.land_type||'');
+    return `
+    <div class="land-item" data-key="${k}" data-price="${priceNum}">
+      <div class="item-check">
+        <input type="checkbox" class="sel-check" data-key="${k}" data-price="${priceNum}"
+               onchange="updateSummary()">
+      </div>
+      <div class="item-img">
+        <img src="${imgSrc}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+             alt="${item.title||'Land'}">
+        <div class="img-fb"><span>🌾</span><span>No image</span></div>
+        ${item.land_type ? `<span class="type-chip ${typeClass}">${item.land_type}</span>` : ''}
+      </div>
+      <div class="item-body">
+        <h3>${item.title || 'Untitled Land'}</h3>
+        <div class="item-meta">
+          <span class="m">📍 ${item.location||'Unknown'}</span>
+          ${item.area ? `<span class="m">📐 ${item.area} sq.ft</span>` : ''}
+          ${item.land_type ? `<span class="m">🏷 ${item.land_type}</span>` : ''}
+        </div>
+        <div class="item-price">
+          ₹${item.price||'—'}
+          <small>Total price</small>
+        </div>
+        <div class="item-actions">
+          <a href="/land/${k}" class="btn-view-sm">View Details →</a>
+          <button class="btn-remove-item" onclick="removeItem('${k}')">✕ Remove</button>
+        </div>
+      </div>
+      ${item.legal_issue==='Yes' ? '<div class="legal-warn">⚠️ Legal Issue</div>' : ''}
+    </div>`;
+  }).join('');
+
+  updateSummary();
+}
+
+function getTypeClass(t) {
+  t = t.toLowerCase();
+  if (t.includes('agri')) return 'agri';
+  if (t.includes('resi')) return 'resi';
+  if (t.includes('comm')) return 'comm';
+  return 'other';
+}
+
+// ── SUMMARY UPDATE ────────────────────────────────────────────
+function updateSummary() {
+  const checks = document.querySelectorAll('.sel-check:checked');
+  const count  = checks.length;
+  let total = 0;
+  checks.forEach(c => total += parseFloat(c.dataset.price)||0);
+
+  const token   = Math.round(total * 0.02);
+  const payNow  = token + 999;
+
+  document.getElementById('selCount').textContent = count;
+  document.getElementById('summarySubtitle').textContent =
+    `${count} propert${count===1?'y':'ies'} selected`;
+  document.getElementById('totalVal').textContent =
+    total ? '₹' + total.toLocaleString('en-IN') : '₹0';
+  document.getElementById('tokenAmt').textContent =
+    token ? '₹' + token.toLocaleString('en-IN') : '₹0';
+  document.getElementById('payNow').textContent =
+    '₹' + (count ? payNow : 999).toLocaleString('en-IN');
+
+  // Enable pay button only if something selected
+  document.getElementById('payBtn').disabled = count === 0;
+  document.getElementById('payBtn').textContent =
+    count ? `🔒 Pay ₹${(count ? payNow : 999).toLocaleString('en-IN')}` : '🔒 Pay Token Amount';
+}
+
+// ── REMOVE / CLEAR ────────────────────────────────────────────
+function removeItem(key) {
+  const saved = getSaved();
+  delete saved[key];
+  setSaved(saved);
+  renderList();
+  showToast('Removed from saved', '');
+}
+
+function clearAll() {
+  if (!confirm('Remove all saved lands?')) return;
+  localStorage.removeItem(SAVE_KEY);
+  renderList();
+  showToast('Cleared all saved lands', 'red');
+}
+
+// ── PAYMENT PANEL SWITCH ──────────────────────────────────────
+function showPanel(id) {
+  document.querySelectorAll('.pay-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel_' + id).classList.add('active');
+}
+
+// ── CARD FORMAT ───────────────────────────────────────────────
+function formatCard(el) {
+  let v = el.value.replace(/\D/g,'').substring(0,16);
+  el.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+
+// ── PROCESS PAYMENT ───────────────────────────────────────────
+function processPayment() {
+  const checks = document.querySelectorAll('.sel-check:checked');
+  if (checks.length === 0) {
+    showToast('Please select at least one property', 'red'); return;
+  }
+
+  const method  = document.querySelector('input[name="payMethod"]:checked').value;
+  const btn     = document.getElementById('payBtn');
+
+  // Basic validation
+  if (method === 'upi') {
+    const upi = document.getElementById('upiId').value.trim();
+    if (!upi || !upi.includes('@')) {
+      showToast('Please enter a valid UPI ID', 'red'); return;
+    }
+  }
+  if (method === 'card') {
+    const cn = document.getElementById('cardNum').value.replace(/\s/g,'');
+    if (cn.length < 16) { showToast('Please enter a valid card number', 'red'); return; }
+  }
+
+  // Collect selected IDs
+  const savedIds = Array.from(checks).map(c => c.dataset.key);
+
+  // Simulate processing
+  btn.disabled = true;
+  btn.textContent = '⏳ Processing…';
+
+  setTimeout(() => {
+    // POST to backend
+    fetch('/process_payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        land_ids: savedIds,
+        payment_method: method,
+        amount: document.getElementById('payNow').textContent
+      })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('refNum').textContent = data.ref_number || 'LL-' + Date.now();
+        document.getElementById('successModal').classList.add('open');
+        // Clear saved after payment
+        localStorage.removeItem(SAVE_KEY);
+      } else {
+        showToast(data.error || 'Payment failed. Try again.', 'red');
+        btn.disabled = false;
+        btn.textContent = '🔒 Pay Token Amount';
+      }
+    })
+    .catch(() => {
+      // If backend not ready yet, still show success modal (demo mode)
+      document.getElementById('refNum').textContent = 'LL-' + Math.floor(Math.random()*900000+100000);
+      document.getElementById('successModal').classList.add('open');
+    });
+  }, 1800);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.className = 'toast', 3200);
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+renderList();
+</script>
+</body>
+</html>

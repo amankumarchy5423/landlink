@@ -3,66 +3,948 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Search Results</title>
+<title>LandLink — Search Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-<script src="https://cdn.tailwindcss.com"></script>
+  :root {
+    --green-deep:    #0d3320;
+    --green-mid:     #1a6b3c;
+    --green-bright:  #22883f;
+    --green-accent:  #34d068;
+    --cream:         #faf8f3;
+    --cream-dark:    #f0ede4;
+    --ink:           #111a14;
+    --ink-light:     #4a5c4f;
+    --border:        #e2ddd4;
+    --white:         #ffffff;
+    --amber:         #d97706;
+    --red:           #dc2626;
+  }
 
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 200;
+    background: rgba(250,248,243,0.92);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    height: 64px;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; flex-shrink: 0;
+  }
+  .brand-icon {
+    width: 36px; height: 36px;
+    background: var(--green-mid);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .brand h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.3rem; font-weight: 700; color: var(--ink);
+  }
+  .brand h1 span { color: var(--green-mid); }
+
+  /* Inline search bar in topbar */
+  .topbar-search {
+    flex: 1; max-width: 540px;
+    display: flex; align-items: center; gap: 0;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .topbar-search:focus-within {
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 3px rgba(26,107,60,0.08);
+  }
+  .topbar-search input {
+    flex: 1; padding: 10px 14px;
+    border: none; outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; color: var(--ink);
+    background: transparent;
+  }
+  .topbar-search input::placeholder { color: #b0ab9f; }
+  .topbar-search .search-divider {
+    width: 1px; height: 20px; background: var(--border);
+  }
+  .topbar-search input.price-inp { max-width: 110px; }
+  .topbar-search .search-btn {
+    padding: 8px 16px; margin: 4px;
+    background: var(--green-mid); color: white;
+    border: none; border-radius: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .topbar-search .search-btn:hover { background: var(--green-bright); }
+
+  /* Saved button */
+  .saved-btn {
+    position: relative;
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 16px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 600;
+    color: var(--ink-light); cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .saved-btn:hover { border-color: var(--green-mid); color: var(--green-mid); }
+  .saved-badge {
+    position: absolute; top: -6px; right: -6px;
+    background: var(--red); color: white;
+    font-size: 0.65rem; font-weight: 700;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+    border: 2px solid var(--cream);
+  }
+  .saved-badge.show { display: flex; }
+
+  /* ── PAGE BODY ── */
+  .page-wrap {
+    max-width: 1180px; margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── RESULTS HEADER ── */
+  .results-header {
+    display: flex; align-items: flex-end;
+    justify-content: space-between; gap: 16px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .results-header .left h2 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+    font-weight: 700; line-height: 1.2;
+    color: var(--ink);
+  }
+  .results-header .left h2 em { font-style: italic; color: var(--green-mid); }
+  .results-header .left p {
+    margin-top: 5px; font-size: 0.9rem;
+    color: var(--ink-light); font-weight: 300;
+  }
+
+  /* Sort bar */
+  .sort-bar {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sort-label { font-size: 0.82rem; color: var(--ink-light); }
+  .sort-select {
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; color: var(--ink);
+    background: var(--white); cursor: pointer;
+    outline: none; appearance: none;
+  }
+
+  /* Filter chips */
+  .filter-chips {
+    display: flex; align-items: center;
+    gap: 8px; flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px;
+    background: rgba(26,107,60,0.08);
+    border: 1px solid rgba(26,107,60,0.2);
+    border-radius: 100px;
+    font-size: 0.78rem; font-weight: 600;
+    color: var(--green-mid); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chip:hover { background: rgba(26,107,60,0.15); }
+  .chip.active {
+    background: var(--green-mid); color: white;
+    border-color: var(--green-mid);
+  }
+  .chip-label { font-size: 0.75rem; color: var(--ink-light); }
+
+  /* ── GRID ── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 24px;
+  }
+
+  /* ── LAND CARD ── */
+  .land-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform 0.25s, box-shadow 0.25s;
+    display: flex; flex-direction: column;
+    animation: fadeUp 0.45s ease both;
+  }
+
+  .land-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.09);
+  }
+
+  /* Image wrapper */
+  .card-img-wrap {
+    position: relative;
+    height: 210px;
+    overflow: hidden;
+    background: var(--cream-dark);
+  }
+
+  .card-img-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+    display: block;
+  }
+
+  .land-card:hover .card-img-wrap img {
+    transform: scale(1.04);
+  }
+
+  /* Fallback when image fails */
+  .img-fallback {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; color: var(--ink-light);
+    font-size: 0.85rem;
+    background: linear-gradient(135deg, #e8f5ed, #f0ede4);
+  }
+  .img-fallback span { font-size: 2.5rem; }
+
+  /* Type badge */
+  .type-badge {
+    position: absolute; top: 12px; left: 12px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .type-badge.residential { background: rgba(59,130,246,0.85); color: white; }
+  .type-badge.agriculture  { background: rgba(34,136,63,0.85);  color: white; }
+  .type-badge.commercial   { background: rgba(217,119,6,0.85);  color: white; }
+  .type-badge.default      { background: rgba(0,0,0,0.5);       color: white; }
+
+  /* Legal issue */
+  .legal-badge {
+    position: absolute; top: 12px; right: 52px;
+    background: rgba(220,38,38,0.88);
+    color: white; font-size: 0.7rem; font-weight: 700;
+    padding: 4px 9px; border-radius: 100px;
+    display: none;
+  }
+  .legal-badge.show { display: block; }
+
+  /* Save button on card */
+  .save-btn {
+    position: absolute; top: 10px; right: 10px;
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.9);
+    border: none; border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+  }
+  .save-btn:hover { transform: scale(1.1); background: white; }
+  .save-btn.saved {
+    background: #fff0f0;
+    box-shadow: 0 2px 8px rgba(220,38,38,0.2);
+  }
+
+  /* Card body */
+  .card-body {
+    padding: 18px 20px 20px;
+    display: flex; flex-direction: column;
+    gap: 10px; flex: 1;
+  }
+
+  .card-title-row {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 8px;
+  }
+
+  .card-title-row h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem; font-weight: 700;
+    color: var(--ink); line-height: 1.3;
+    flex: 1;
+  }
+
+  .card-meta {
+    display: flex; flex-direction: column; gap: 5px;
+  }
+
+  .meta-row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.83rem; color: var(--ink-light);
+  }
+  .meta-row .meta-icon { font-size: 13px; }
+
+  /* Price row */
+  .price-row {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .price {
+    font-family: 'Fraunces', serif;
+    font-size: 1.3rem; font-weight: 700;
+    color: var(--green-mid);
+  }
+  .price-per {
+    font-size: 0.75rem; color: var(--ink-light);
+    font-weight: 300; font-family: 'DM Sans', sans-serif;
+    margin-top: 1px;
+  }
+
+  .card-actions {
+    display: flex; gap: 8px;
+  }
+
+  .btn-view {
+    flex: 1; padding: 10px 14px;
+    background: var(--green-mid); color: white;
+    border: none; border-radius: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    display: flex; align-items: center;
+    justify-content: center; gap: 5px;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-view:hover {
+    background: var(--green-bright);
+    transform: translateY(-1px);
+  }
+
+  .btn-cart {
+    padding: 10px 14px;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    font-size: 16px; cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-cart:hover {
+    border-color: var(--green-mid);
+    background: rgba(26,107,60,0.06);
+  }
+  .btn-cart.added {
+    background: rgba(26,107,60,0.1);
+    border-color: var(--green-mid);
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 24px;
+  }
+  .empty-icon { font-size: 4rem; margin-bottom: 16px; }
+  .empty-state h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem; font-weight: 700;
+    color: var(--ink); margin-bottom: 8px;
+  }
+  .empty-state p {
+    font-size: 0.95rem; color: var(--ink-light);
+    margin-bottom: 24px; font-weight: 300;
+  }
+  .btn-browse {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px;
+    background: var(--green-mid); color: white;
+    border-radius: 12px; text-decoration: none;
+    font-weight: 600; font-size: 0.9rem;
+    transition: background 0.2s;
+  }
+  .btn-browse:hover { background: var(--green-bright); }
+
+  /* ── SAVED PANEL (drawer) ── */
+  .saved-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(3px);
+  }
+  .saved-overlay.open { opacity: 1; pointer-events: all; }
+
+  .saved-drawer {
+    position: fixed; top: 0; right: 0;
+    width: 360px; height: 100vh;
+    background: var(--white);
+    border-left: 1px solid var(--border);
+    z-index: 501;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    display: flex; flex-direction: column;
+    box-shadow: -8px 0 40px rgba(0,0,0,0.12);
+  }
+  .saved-drawer.open { transform: translateX(0); }
+
+  .drawer-header {
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    justify-content: space-between;
+  }
+  .drawer-header h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.2rem; font-weight: 700; color: var(--ink);
+  }
+  .drawer-close {
+    width: 32px; height: 32px;
+    background: var(--cream); border: none;
+    border-radius: 8px; cursor: pointer;
+    font-size: 16px; color: var(--ink-light);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .drawer-close:hover { background: var(--border); }
+
+  .drawer-list {
+    flex: 1; overflow-y: auto;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .drawer-item {
+    display: flex; gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--cream);
+    transition: border-color 0.2s;
+  }
+  .drawer-item:hover { border-color: var(--green-mid); }
+
+  .drawer-item-img {
+    width: 60px; height: 60px;
+    border-radius: 10px; object-fit: cover;
+    background: var(--cream-dark);
+    flex-shrink: 0;
+  }
+
+  .drawer-item-info { flex: 1; min-width: 0; }
+  .drawer-item-info h4 {
+    font-family: 'Fraunces', serif;
+    font-size: 0.92rem; font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .drawer-item-info p {
+    font-size: 0.78rem; color: var(--ink-light); margin-top: 2px;
+  }
+  .drawer-item-info .d-price {
+    font-size: 0.88rem; font-weight: 600;
+    color: var(--green-mid); margin-top: 3px;
+  }
+
+  .drawer-remove {
+    background: none; border: none;
+    font-size: 16px; cursor: pointer;
+    color: #ccc; transition: color 0.2s;
+  }
+  .drawer-remove:hover { color: var(--red); }
+
+  .drawer-empty {
+    text-align: center; padding: 60px 20px;
+    color: var(--ink-light); font-size: 0.9rem;
+  }
+  .drawer-empty span { font-size: 3rem; display: block; margin-bottom: 10px; }
+
+  .drawer-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .drawer-footer p {
+    font-size: 0.8rem; color: var(--ink-light);
+    margin-bottom: 10px; text-align: center;
+  }
+  .btn-save-profile {
+    width: 100%; padding: 12px;
+    background: var(--green-mid); color: white;
+    border: none; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-save-profile:hover { background: var(--green-bright); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1a1a1a; color: white;
+    padding: 11px 20px; border-radius: 12px;
+    font-size: 0.88rem; font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    opacity: 0; pointer-events: none; z-index: 9999;
+    transition: all 0.3s; white-space: nowrap;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+  .toast.green { background: var(--green-mid); }
+  .toast.red   { background: var(--red); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .land-card:nth-child(1)  { animation-delay: 0.02s; }
+  .land-card:nth-child(2)  { animation-delay: 0.06s; }
+  .land-card:nth-child(3)  { animation-delay: 0.10s; }
+  .land-card:nth-child(4)  { animation-delay: 0.14s; }
+  .land-card:nth-child(5)  { animation-delay: 0.18s; }
+  .land-card:nth-child(6)  { animation-delay: 0.22s; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .topbar { padding: 0 16px; }
+    .topbar-search { display: none; }
+    .page-wrap { padding: 28px 16px 60px; }
+    .results-grid { grid-template-columns: 1fr; }
+    .saved-drawer { width: 100%; }
+  }
+</style>
 </head>
+<body>
 
-<body class="bg-gray-50">
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="/" class="brand">
+    <div class="brand-icon">🌿</div>
+    <h1>Land<span>Link</span></h1>
+  </a>
 
-<div class="max-w-7xl mx-auto px-6 py-10">
+  <!-- Inline search (refine) -->
+  <form action="/search" method="GET" class="topbar-search">
+    <input type="text" name="location" placeholder="🔍  Location, city, district…"
+      value="{{ request.args.get('location', '') }}">
+    <div class="search-divider"></div>
+    <input type="number" name="min_price" placeholder="Min ₹"
+      class="price-inp" value="{{ request.args.get('min_price', '') }}">
+    <div class="search-divider"></div>
+    <input type="number" name="max_price" placeholder="Max ₹"
+      class="price-inp" value="{{ request.args.get('max_price', '') }}">
+    <button type="submit" class="search-btn">Search</button>
+  </form>
 
-    <h1 class="text-3xl font-bold text-gray-800 mb-8">
-        Search Results
-    </h1>
+  <!-- Saved button -->
+  <button class="saved-btn" onclick="openDrawer()">
+    🔖 Saved
+    <span class="saved-badge" id="savedBadge">0</span>
+  </button>
+</nav>
 
-    {% if lands %}
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-        {% for land in lands %}
-        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition overflow-hidden">
-
-            <!-- Image -->
-            <img 
-                src="{{ url_for('static', filename='uploads/' + land.image) }}" 
-                class="w-full h-48 object-cover"
-            >
-
-            <!-- Content -->
-            <div class="p-5">
-
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">
-                    {{ land.title }}
-                </h3>
-
-                <p class="text-gray-600 mb-1">
-                    📍 {{ land.location }}
-                </p>
-
-                <p class="text-green-600 font-bold text-lg mb-4">
-                    ₹{{ land.price }}
-                </p>
-
-                <a href="/land/{{ loop.index0 }}"
-                   class="block text-center bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
-                   View Details
-                </a>
-
-            </div>
-
-        </div>
-        {% endfor %}
-
+<!-- SAVED OVERLAY + DRAWER -->
+<div class="saved-overlay" id="savedOverlay" onclick="closeDrawer()"></div>
+<div class="saved-drawer" id="savedDrawer">
+  <div class="drawer-header">
+    <h3>🔖 Saved Lands</h3>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-list" id="drawerList">
+    <div class="drawer-empty">
+      <span>📭</span>
+      No saved lands yet.<br>Hit the bookmark icon on any card!
     </div>
-
-    {% else %}
-    <div class="text-center text-gray-500 text-lg">
-        No lands found matching your criteria.
-    </div>
-    {% endif %}
-
+  </div>
+  <div class="drawer-footer">
+    <p>Saved lands are stored locally in your browser.</p>
+    <button class="btn-save-profile" onclick="savesToProfile()">
+      Save to My Profile →
+    </button>
+  </div>
 </div>
 
+<!-- MAIN -->
+<div class="page-wrap">
+
+  <!-- RESULTS HEADER -->
+  <div class="results-header">
+    <div class="left">
+      <h2>
+        {% if lands %}
+          Found <em>{{ lands|length }} propert{{ 'y' if lands|length == 1 else 'ies' }}</em>
+          {% if request.args.get('location') %}
+            in <em>{{ request.args.get('location')|title }}</em>
+          {% endif %}
+        {% else %}
+          No results found
+        {% endif %}
+      </h2>
+      <p>
+        {% if request.args.get('min_price') or request.args.get('max_price') %}
+          Price filter active ·
+        {% endif %}
+        Showing all available listings
+      </p>
+    </div>
+
+    {% if lands %}
+    <div class="sort-bar">
+      <span class="sort-label">Sort by</span>
+      <select class="sort-select" id="sortSelect" onchange="sortCards(this.value)">
+        <option value="default">Default</option>
+        <option value="price_asc">Price: Low → High</option>
+        <option value="price_desc">Price: High → Low</option>
+        <option value="area_desc">Area: Largest first</option>
+      </select>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- FILTER CHIPS -->
+  {% if lands %}
+  <div class="filter-chips">
+    <span class="chip-label">Filter:</span>
+    <button class="chip active" onclick="filterCards('all', this)">All</button>
+    <button class="chip" onclick="filterCards('Residential', this)">🏘 Residential</button>
+    <button class="chip" onclick="filterCards('Agriculture', this)">🌾 Agriculture</button>
+    <button class="chip" onclick="filterCards('Commercial', this)">🏢 Commercial</button>
+    <button class="chip" onclick="filterCards('no_legal', this)">✅ No Legal Issues</button>
+  </div>
+  {% endif %}
+
+  <!-- GRID -->
+  <div class="results-grid" id="resultsGrid">
+
+    {% if lands %}
+      {% for land in lands %}
+      <div class="land-card"
+           data-id="{{ loop.index0 }}"
+           data-type="{{ land.land_type | default('') }}"
+           data-legal="{{ land.legal_issue | default('No') }}"
+           data-price="{{ land.price | replace(',','') | replace(' ','') }}"
+           data-area="{{ land.area | default(0) }}"
+           data-title="{{ land.title }}"
+           data-location="{{ land.location }}"
+           data-image="{{ land.image | default('') }}">
+
+        <!-- Image -->
+        <div class="card-img-wrap">
+          <img
+            src="/static/{{ land.image }}"
+            alt="{{ land.title }}"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+          >
+          <div class="img-fallback" style="display:none;">
+            <span>🌾</span>
+            <span>No image available</span>
+          </div>
+
+          <!-- Type badge -->
+          {% set t = land.land_type | default('') | lower %}
+          <span class="type-badge {% if 'residential' in t %}residential{% elif 'agricult' in t %}agriculture{% elif 'commercial' in t %}commercial{% else %}default{% endif %}">
+            {{ land.land_type | default('Land') }}
+          </span>
+
+          <!-- Legal issue badge -->
+          {% if land.legal_issue == 'Yes' %}
+          <span class="legal-badge show">⚠️ Legal</span>
+          {% endif %}
+
+          <!-- Save / bookmark button -->
+          <button class="save-btn"
+                  onclick="toggleSave(this, {{ loop.index0 }})"
+                  title="Save this land"
+                  data-index="{{ loop.index0 }}">
+            🔖
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body">
+          <div class="card-title-row">
+            <h3>{{ land.title }}</h3>
+          </div>
+
+          <div class="card-meta">
+            <div class="meta-row">
+              <span class="meta-icon">📍</span>
+              <span>{{ land.location }}</span>
+            </div>
+            {% if land.area %}
+            <div class="meta-row">
+              <span class="meta-icon">📐</span>
+              <span>{{ land.area }} sq.ft</span>
+            </div>
+            {% endif %}
+            {% if land.address %}
+            <div class="meta-row">
+              <span class="meta-icon">🏠</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;">{{ land.address }}</span>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="price-row">
+            <div>
+              <div class="price">₹{{ land.price }}</div>
+              {% if land.area and land.area != '0' %}
+              <div class="price-per">Total for {{ land.area }} sq.ft</div>
+              {% endif %}
+            </div>
+            <div class="card-actions">
+              <button class="btn-cart"
+                      onclick="toggleSave(this.closest('.land-card').querySelector('.save-btn'), {{ loop.index0 }})"
+                      title="Add to saved">
+                🛒
+              </button>
+              <a href="/land/{{ loop.index0 }}" class="btn-view">
+                View →
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+
+    {% else %}
+      <!-- Empty state -->
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No lands found</h3>
+        <p>Try adjusting your location or price range to see more results.</p>
+        <a href="/" class="btn-browse">← Browse All Listings</a>
+      </div>
+    {% endif %}
+
+  </div><!-- end grid -->
+
+</div><!-- end page-wrap -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── SAVED LANDS (localStorage) ──────────────────────────────
+const SAVE_KEY = 'landlink_saved';
+
+function getSaved() {
+  try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function setSaved(obj) {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(obj));
+}
+
+function toggleSave(btn, index) {
+  const saved = getSaved();
+  const card  = document.querySelector(`.land-card[data-id="${index}"]`);
+  const key   = String(index);
+
+  if (saved[key]) {
+    // Remove
+    delete saved[key];
+    btn.classList.remove('saved');
+    btn.textContent = '🔖';
+    showToast('Removed from saved', '');
+  } else {
+    // Add
+    saved[key] = {
+      id:       index,
+      title:    card.dataset.title,
+      location: card.dataset.location,
+      price:    card.dataset.price,
+      image:    card.dataset.image
+    };
+    btn.classList.add('saved');
+    btn.textContent = '❤️';
+    showToast('✅ Saved to your list!', 'green');
+  }
+
+  setSaved(saved);
+  updateBadge();
+  renderDrawer();
+}
+
+function updateBadge() {
+  const count = Object.keys(getSaved()).length;
+  const badge = document.getElementById('savedBadge');
+  badge.textContent = count;
+  badge.classList.toggle('show', count > 0);
+}
+
+function renderDrawer() {
+  const saved  = getSaved();
+  const list   = document.getElementById('drawerList');
+  const keys   = Object.keys(saved);
+
+  if (keys.length === 0) {
+    list.innerHTML = `<div class="drawer-empty"><span>📭</span>No saved lands yet.<br>Hit the bookmark icon on any card!</div>`;
+    return;
+  }
+
+  list.innerHTML = keys.map(k => {
+    const item = saved[k];
+    const imgSrc = item.image ? `/static/${item.image}` : '';
+    return `
+      <div class="drawer-item">
+        <img class="drawer-item-img"
+             src="${imgSrc}"
+             onerror="this.src='';this.style.background='#e8f5ed';"
+             alt="${item.title}">
+        <div class="drawer-item-info">
+          <h4>${item.title}</h4>
+          <p>📍 ${item.location}</p>
+          <div class="d-price">₹${item.price}</div>
+        </div>
+        <button class="drawer-remove" onclick="removeSaved('${k}')" title="Remove">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function removeSaved(key) {
+  const saved = getSaved();
+  delete saved[key];
+  setSaved(saved);
+  updateBadge();
+  renderDrawer();
+
+  // Reset card button if visible
+  const btn = document.querySelector(`.save-btn[data-index="${key}"]`);
+  if (btn) { btn.classList.remove('saved'); btn.textContent = '🔖'; }
+
+  showToast('Removed from saved', '');
+}
+
+function savesToProfile() {
+  const count = Object.keys(getSaved()).length;
+  if (count === 0) { showToast('No saved lands to send!', 'red'); return; }
+  // POST saved IDs to backend
+  fetch('/save_wishlist', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids: Object.keys(getSaved()).map(Number) })
+  }).then(r => {
+    if (r.ok) showToast('✅ Saved to your profile!', 'green');
+    else      showToast('Please login to save to profile', 'red');
+  }).catch(() => showToast('Please login to save to profile', 'red'));
+}
+
+// ── DRAWER ──────────────────────────────────────────────────
+function openDrawer() {
+  renderDrawer();
+  document.getElementById('savedDrawer').classList.add('open');
+  document.getElementById('savedOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer() {
+  document.getElementById('savedDrawer').classList.remove('open');
+  document.getElementById('savedOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── FILTER CHIPS ────────────────────────────────────────────
+function filterCards(type, chipEl) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chipEl.classList.add('active');
+
+  document.querySelectorAll('.land-card').forEach(card => {
+    if (type === 'all') {
+      card.style.display = '';
+    } else if (type === 'no_legal') {
+      card.style.display = card.dataset.legal === 'No' ? '' : 'none';
+    } else {
+      card.style.display = card.dataset.type === type ? '' : 'none';
+    }
+  });
+}
+
+// ── SORT ────────────────────────────────────────────────────
+function sortCards(val) {
+  const grid  = document.getElementById('resultsGrid');
+  const cards = Array.from(grid.querySelectorAll('.land-card'));
+
+  cards.sort((a, b) => {
+    const pa = parseFloat(a.dataset.price) || 0;
+    const pb = parseFloat(b.dataset.price) || 0;
+    const aa = parseFloat(a.dataset.area)  || 0;
+    const ab = parseFloat(b.dataset.area)  || 0;
+
+    if (val === 'price_asc')  return pa - pb;
+    if (val === 'price_desc') return pb - pa;
+    if (val === 'area_desc')  return ab - aa;
+    return 0;
+  });
+
+  cards.forEach(c => grid.appendChild(c));
+}
+
+// ── TOAST ────────────────────────────────────────────────────
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+(function init() {
+  const saved = getSaved();
+  updateBadge();
+  // Restore saved button states
+  Object.keys(saved).forEach(key => {
+    const btn = document.querySelector(`.save-btn[data-index="${key}"]`);
+    if (btn) { btn.classList.add('saved'); btn.textContent = '❤️'; }
+  });
+})();
+</script>
 </body>
 </html>

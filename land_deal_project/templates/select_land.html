@@ -1,178 +1,954 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Select Land</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LandLink — Select Land Location</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-body{
-margin:0;
-padding:0;
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --green-deep:   #0d3320;
+  --green-mid:    #1a6b3c;
+  --green-bright: #22883f;
+  --green-accent: #34d068;
+  --cream:        #faf8f3;
+  --ink:          #111a14;
+  --ink-light:    #4a5c4f;
+  --border:       #e2ddd4;
+  --white:        #ffffff;
+  --red:          #dc2626;
+  --amber:        #d97706;
+  --glass:        rgba(250,248,243,0.92);
 }
 
-#map{
-height:100vh;
-width:100%;
+html, body { height:100%; overflow:hidden; font-family:'DM Sans',sans-serif; }
+
+/* ── FULL-SCREEN MAP ── */
+#map {
+  position:fixed; inset:0; z-index:1;
+  width:100%; height:100%;
 }
 
-#searchBox{
-position:absolute;
-top:10px;
-left:50%;
-transform:translateX(-50%);
-z-index:1000;
-width:320px;
-padding:10px;
-border-radius:8px;
-border:1px solid #ccc;
+/* ── TOP BAR ── */
+.topbar {
+  position:fixed; top:0; left:0; right:0;
+  z-index:500; height:60px;
+  background:var(--glass);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(226,221,212,0.8);
+  display:flex; align-items:center;
+  padding:0 16px; gap:10px;
 }
 
-#searchBtn{
-position:absolute;
-top:10px;
-left:calc(50% + 170px);
-z-index:1000;
-padding:10px 15px;
-background:#333;
-color:white;
-border:none;
-border-radius:8px;
-cursor:pointer;
+.brand {
+  display:flex; align-items:center; gap:8px;
+  text-decoration:none; flex-shrink:0;
+}
+.brand-icon {
+  width:32px; height:32px; background:var(--green-mid);
+  border-radius:9px; display:flex; align-items:center;
+  justify-content:center; font-size:14px;
+}
+.brand h1 {
+  font-family:'Fraunces',serif; font-size:1.1rem;
+  font-weight:700; color:var(--ink);
+}
+.brand h1 span { color:var(--green-mid); }
+
+/* Search bar */
+.search-wrap {
+  flex:1; max-width:420px; position:relative; margin:0 auto;
+}
+.search-inner {
+  display:flex; align-items:center;
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:12px; overflow:hidden;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+.search-inner:focus-within {
+  border-color:var(--green-mid);
+  box-shadow:0 0 0 3px rgba(26,107,60,0.1);
+}
+.search-icon {
+  padding:0 10px 0 12px;
+  font-size:15px; color:#b0ab9f; flex-shrink:0;
+}
+.search-inner input {
+  flex:1; padding:10px 4px;
+  border:none; outline:none;
+  font-family:'DM Sans',sans-serif;
+  font-size:0.88rem; color:var(--ink);
+  background:transparent;
+}
+.search-inner input::placeholder { color:#b0ab9f; }
+.search-inner button {
+  padding:8px 14px; margin:4px;
+  background:var(--green-mid); color:white;
+  border:none; border-radius:9px;
+  font-family:'DM Sans',sans-serif;
+  font-size:0.82rem; font-weight:600;
+  cursor:pointer; white-space:nowrap;
+  transition:background 0.2s;
+}
+.search-inner button:hover { background:var(--green-bright); }
+
+/* Search suggestions dropdown */
+.suggestions {
+  position:absolute; top:calc(100% + 6px); left:0; right:0;
+  background:var(--white); border:1.5px solid var(--border);
+  border-radius:12px; overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,0.12);
+  display:none; z-index:600;
+}
+.suggestions.show { display:block; }
+.suggestion-item {
+  padding:10px 14px; font-size:0.85rem;
+  color:var(--ink); cursor:pointer;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:8px;
+  transition:background 0.15s;
+}
+.suggestion-item:last-child { border-bottom:none; }
+.suggestion-item:hover { background:var(--cream); }
+.suggestion-item .s-icon { font-size:13px; color:var(--ink-light); }
+
+/* Topbar right side */
+.topbar-right {
+  display:flex; align-items:center; gap:8px; flex-shrink:0;
 }
 
-#confirmBtn{
-position:absolute;
-bottom:20px;
-left:50%;
-transform:translateX(-50%);
-z-index:1000;
-padding:12px 20px;
-background:green;
-color:white;
-border:none;
-border-radius:8px;
-cursor:pointer;
+/* ── LAYER TOGGLE ── */
+.layer-btn {
+  display:flex; align-items:center; gap:6px;
+  padding:8px 12px;
+  background:var(--white); border:1.5px solid var(--border);
+  border-radius:11px; font-family:'DM Sans',sans-serif;
+  font-size:0.8rem; font-weight:600; color:var(--ink-light);
+  cursor:pointer; transition:all 0.2s; flex-shrink:0;
+}
+.layer-btn:hover,
+.layer-btn.active { border-color:var(--green-mid); color:var(--green-mid); background:rgba(26,107,60,0.06); }
+
+/* ── LAND PREDICTOR BTN ── */
+.predictor-btn {
+  display:flex; align-items:center; gap:6px;
+  padding:8px 13px;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  color:white; border:none; border-radius:11px;
+  font-family:'DM Sans',sans-serif;
+  font-size:0.8rem; font-weight:600;
+  cursor:pointer; transition:all 0.2s; flex-shrink:0;
+  position:relative;
+}
+.predictor-btn:hover { opacity:0.9; transform:translateY(-1px); }
+.predictor-badge {
+  position:absolute; top:-6px; right:-6px;
+  background:var(--amber); color:white;
+  font-size:0.58rem; font-weight:700;
+  padding:2px 5px; border-radius:100px;
+  border:2px solid var(--cream);
+}
+
+/* Close button */
+.close-btn {
+  width:36px; height:36px; flex-shrink:0;
+  background:var(--white); border:1.5px solid var(--border);
+  border-radius:10px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; color:var(--ink-light);
+  transition:all 0.2s;
+}
+.close-btn:hover { background:#fee2e2; border-color:#fca5a5; color:var(--red); }
+
+/* ── MAP CONTROLS (left side) ── */
+.map-controls {
+  position:fixed; left:14px;
+  top:50%; transform:translateY(-50%);
+  z-index:500; display:flex; flex-direction:column; gap:8px;
+}
+.ctrl-btn {
+  width:40px; height:40px;
+  background:var(--glass); backdrop-filter:blur(10px);
+  border:1.5px solid rgba(226,221,212,0.9);
+  border-radius:11px; display:flex; align-items:center;
+  justify-content:center; font-size:16px; cursor:pointer;
+  transition:all 0.2s; color:var(--ink);
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+.ctrl-btn:hover { background:var(--white); border-color:var(--green-mid); }
+.ctrl-btn.active { background:var(--green-mid); color:white; border-color:var(--green-mid); }
+
+/* ── INFO PANEL (right side) ── */
+.info-panel {
+  position:fixed; right:14px; top:74px;
+  z-index:500; width:270px;
+  display:flex; flex-direction:column; gap:10px;
+}
+
+/* Coordinate card */
+.coord-card {
+  background:var(--glass); backdrop-filter:blur(16px);
+  border:1.5px solid rgba(226,221,212,0.85);
+  border-radius:16px; padding:14px 16px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  animation:slideIn 0.3s ease;
+}
+.coord-card .cc-title {
+  font-size:0.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.06em;
+  color:var(--ink-light); margin-bottom:10px;
+  display:flex; align-items:center; gap:6px;
+}
+.coord-pin { width:8px; height:8px; border-radius:50%; background:#ccc; }
+.coord-pin.selected { background:var(--green-accent); box-shadow:0 0 0 3px rgba(52,208,104,0.25); }
+.coord-row {
+  display:flex; justify-content:space-between;
+  align-items:center; margin-bottom:6px;
+}
+.coord-row:last-of-type { margin-bottom:0; }
+.coord-label { font-size:0.78rem; color:var(--ink-light); }
+.coord-val {
+  font-family:monospace; font-size:0.82rem;
+  font-weight:600; color:var(--ink);
+  background:var(--cream); padding:3px 8px;
+  border-radius:6px; border:1px solid var(--border);
+}
+.coord-val.empty { color:#ccc; font-style:italic; }
+
+/* address reverse geocode */
+.addr-line {
+  font-size:0.78rem; color:var(--ink-light);
+  line-height:1.5; margin-top:8px; padding-top:8px;
+  border-top:1px solid var(--border);
+  min-height:18px;
+}
+
+/* Confirm button card */
+.confirm-card {
+  background:var(--glass); backdrop-filter:blur(16px);
+  border:1.5px solid rgba(226,221,212,0.85);
+  border-radius:16px; padding:14px 16px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+.confirm-card .cc-title {
+  font-size:0.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.06em;
+  color:var(--ink-light); margin-bottom:12px;
+  display:flex; align-items:center; gap:6px;
+}
+
+.btn-confirm {
+  width:100%; padding:12px;
+  background:linear-gradient(135deg,var(--green-mid),var(--green-bright));
+  color:white; border:none; border-radius:12px;
+  font-family:'DM Sans',sans-serif; font-size:0.92rem;
+  font-weight:700; cursor:pointer;
+  transition:all 0.25s; display:flex;
+  align-items:center; justify-content:center; gap:7px;
+  box-shadow:0 4px 16px rgba(26,107,60,0.25);
+}
+.btn-confirm:hover:not(:disabled) {
+  transform:translateY(-2px);
+  box-shadow:0 8px 28px rgba(26,107,60,0.35);
+}
+.btn-confirm:disabled {
+  background:#d1d5db; cursor:not-allowed;
+  box-shadow:none; transform:none;
+}
+
+.btn-add-cart {
+  width:100%; padding:10px;
+  background:transparent;
+  border:1.5px solid var(--border); border-radius:12px;
+  font-family:'DM Sans',sans-serif; font-size:0.88rem;
+  font-weight:600; color:var(--ink-light);
+  cursor:pointer; margin-top:8px;
+  transition:all 0.2s; display:flex;
+  align-items:center; justify-content:center; gap:7px;
+}
+.btn-add-cart:hover:not(:disabled) {
+  border-color:var(--green-mid); color:var(--green-mid);
+  background:rgba(26,107,60,0.05);
+}
+.btn-add-cart:disabled { opacity:0.4; cursor:not-allowed; }
+.btn-add-cart.added {
+  background:rgba(26,107,60,0.08);
+  border-color:var(--green-mid); color:var(--green-mid);
+}
+
+/* ── PREDICTOR PANEL ── */
+.predictor-panel {
+  position:fixed; right:14px; top:74px; bottom:20px;
+  z-index:600; width:300px;
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:20px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.14);
+  overflow:hidden; display:flex; flex-direction:column;
+  transform:translateX(340px);
+  transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.predictor-panel.open { transform:translateX(0); }
+
+.pred-head {
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,#4c1d95,#7c3aed);
+  display:flex; justify-content:space-between; align-items:center;
+}
+.pred-head h3 {
+  font-family:'Fraunces',serif; font-size:1rem;
+  font-weight:700; color:white;
+}
+.pred-head p { font-size:0.75rem; color:rgba(255,255,255,0.7); margin-top:2px; }
+.pred-close {
+  width:28px; height:28px; background:rgba(255,255,255,0.15);
+  border:none; border-radius:8px; cursor:pointer;
+  color:white; font-size:14px; display:flex;
+  align-items:center; justify-content:center;
+}
+
+.pred-body { flex:1; overflow-y:auto; padding:18px; }
+
+.pred-coming {
+  text-align:center; padding:40px 20px;
+}
+.pred-coming .pc-icon { font-size:3rem; margin-bottom:12px; }
+.pred-coming h4 {
+  font-family:'Fraunces',serif; font-size:1.1rem;
+  font-weight:700; color:var(--ink); margin-bottom:6px;
+}
+.pred-coming p {
+  font-size:0.82rem; color:var(--ink-light); line-height:1.6;
+}
+
+.pred-features {
+  display:flex; flex-direction:column; gap:10px; margin-top:20px;
+}
+.pred-feat {
+  display:flex; gap:10px; align-items:flex-start;
+  padding:10px 12px;
+  background:var(--cream); border-radius:11px;
+  border:1px solid var(--border);
+}
+.pred-feat .pf-icon { font-size:1.2rem; flex-shrink:0; }
+.pred-feat h5 {
+  font-size:0.82rem; font-weight:700;
+  color:var(--ink); margin-bottom:2px;
+}
+.pred-feat p { font-size:0.75rem; color:var(--ink-light); line-height:1.4; }
+
+.pred-notify {
+  margin-top:16px;
+}
+.pred-notify input {
+  width:100%; padding:10px 12px;
+  border:1.5px solid var(--border); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:0.85rem;
+  color:var(--ink); outline:none;
+  transition:border-color 0.2s;
+}
+.pred-notify input:focus { border-color:#7c3aed; }
+.pred-notify button {
+  width:100%; margin-top:8px; padding:11px;
+  background:#7c3aed; color:white; border:none;
+  border-radius:10px; font-family:'DM Sans',sans-serif;
+  font-size:0.88rem; font-weight:600; cursor:pointer;
+  transition:background 0.2s;
+}
+.pred-notify button:hover { background:#6d28d9; }
+
+/* ── INSTRUCTIONS PILL ── */
+.hint-pill {
+  position:fixed; bottom:20px; left:50%;
+  transform:translateX(-50%); z-index:500;
+  background:rgba(17,26,20,0.82); color:white;
+  backdrop-filter:blur(12px);
+  padding:10px 20px; border-radius:100px;
+  font-size:0.82rem; font-weight:500;
+  display:flex; align-items:center; gap:8px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.2);
+  animation:fadeUp 0.4s ease;
+  pointer-events:none;
+}
+.hint-pill.hide {
+  opacity:0; transition:opacity 0.4s;
+}
+
+/* ── ZOOM LEVEL ── */
+.zoom-display {
+  position:fixed; bottom:20px; right:14px;
+  z-index:500;
+  background:var(--glass); backdrop-filter:blur(10px);
+  border:1.5px solid rgba(226,221,212,0.85);
+  border-radius:10px; padding:6px 12px;
+  font-size:0.78rem; font-weight:600; color:var(--ink-light);
+  box-shadow:0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* ── SCALE DISPLAY ── */
+.map-scale {
+  position:fixed; bottom:50px; right:14px;
+  z-index:500;
+  background:var(--glass); backdrop-filter:blur(10px);
+  border:1.5px solid rgba(226,221,212,0.85);
+  border-radius:10px; padding:5px 12px;
+  font-size:0.75rem; color:var(--ink-light);
+}
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; top:72px; left:50%;
+  transform:translateX(-50%) translateY(-20px);
+  background:#1a1a1a; color:white;
+  padding:10px 18px; border-radius:11px;
+  font-size:0.85rem; font-weight:500;
+  box-shadow:0 4px 20px rgba(0,0,0,0.2);
+  opacity:0; pointer-events:none; z-index:9999;
+  transition:all 0.3s; white-space:nowrap;
+  display:flex; align-items:center; gap:7px;
+}
+.toast.show {
+  opacity:1; transform:translateX(-50%) translateY(0);
+}
+.toast.green { background:var(--green-mid); }
+.toast.red   { background:var(--red); }
+.toast.purple{ background:#7c3aed; }
+
+/* ── ANIMATIONS ── */
+@keyframes slideIn {
+  from { opacity:0; transform:translateX(10px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateX(-50%) translateY(10px); }
+  to   { opacity:1; transform:translateX(-50%) translateY(0); }
+}
+
+/* Leaflet overrides */
+.leaflet-control-zoom {
+  display:none !important; /* we use custom controls */
+}
+.leaflet-control-attribution {
+  font-size:0.68rem;
+  background:rgba(250,248,243,0.7) !important;
+  backdrop-filter:blur(4px);
+}
+
+/* Custom marker */
+.ll-marker {
+  width:36px; height:36px;
+  background:linear-gradient(135deg,var(--green-mid),var(--green-accent));
+  border-radius:50% 50% 50% 0;
+  transform:rotate(-45deg);
+  border:3px solid white;
+  box-shadow:0 4px 16px rgba(0,0,0,0.3);
+}
+.ll-marker-pulse {
+  position:absolute; inset:-6px;
+  border-radius:50% 50% 50% 0;
+  background:rgba(52,208,104,0.2);
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%   { transform:scale(1); opacity:0.8; }
+  100% { transform:scale(1.6); opacity:0; }
 }
 </style>
-
 </head>
-
 <body>
 
-<input id="searchBox" placeholder="Search location...">
-<button id="searchBtn">Search</button>
-<button id="confirmBtn">Confirm Location</button>
-
+<!-- MAP -->
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="/" class="brand" target="_blank">
+    <div class="brand-icon">🌿</div>
+    <h1>Land<span>Link</span></h1>
+  </a>
 
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-inner">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchBox" placeholder="Search city, village, address…"
+             oninput="onSearchInput()" onkeydown="if(event.key==='Enter') doSearch()">
+      <button onclick="doSearch()">Search</button>
+    </div>
+    <div class="suggestions" id="suggestions"></div>
+  </div>
+
+  <div class="topbar-right">
+    <!-- Layer toggle -->
+    <button class="layer-btn active" id="layerBtn" onclick="toggleLayer()">
+      🛰 Satellite
+    </button>
+
+    <!-- Land Predictor -->
+    <button class="predictor-btn" onclick="togglePredictor()">
+      🤖 AI Predictor
+      <span class="predictor-badge">SOON</span>
+    </button>
+
+    <!-- Close popup -->
+    <button class="close-btn" onclick="window.close()" title="Close">✕</button>
+  </div>
+</nav>
+
+<!-- LEFT MAP CONTROLS -->
+<div class="map-controls">
+  <button class="ctrl-btn" onclick="map.zoomIn()" title="Zoom In">＋</button>
+  <button class="ctrl-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
+  <button class="ctrl-btn" onclick="locateMe()" title="My Location" id="locBtn">📍</button>
+  <button class="ctrl-btn" id="measureBtn" onclick="toggleMeasure()" title="Measure Distance">📏</button>
+  <button class="ctrl-btn" onclick="resetView()" title="Reset View">🔄</button>
+</div>
+
+<!-- RIGHT INFO PANEL -->
+<div class="info-panel" id="infoPanel">
+
+  <!-- Coordinates card -->
+  <div class="coord-card">
+    <div class="cc-title">
+      <div class="coord-pin" id="coordDot"></div>
+      Pin Location
+    </div>
+    <div class="coord-row">
+      <span class="coord-label">Latitude</span>
+      <span class="coord-val empty" id="dispLat">—</span>
+    </div>
+    <div class="coord-row">
+      <span class="coord-label">Longitude</span>
+      <span class="coord-val empty" id="dispLng">—</span>
+    </div>
+    <div class="addr-line" id="addrLine">Click anywhere on the map to pin your land</div>
+  </div>
+
+  <!-- Confirm + Cart card -->
+  <div class="confirm-card">
+    <div class="cc-title">📋 Actions</div>
+
+    <button class="btn-confirm" id="confirmBtn" disabled onclick="confirmLocation()">
+      ✅ Confirm Location
+    </button>
+
+    <button class="btn-add-cart" id="cartBtn" disabled onclick="addToCart()">
+      🛒 Add to Cart
+    </button>
+
+    <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
+      <div style="font-size:0.72rem; font-weight:700; text-transform:uppercase;
+                  letter-spacing:0.05em; color:var(--ink-light); margin-bottom:6px;">
+        Quick Tips
+      </div>
+      <div style="font-size:0.75rem; color:var(--ink-light); line-height:1.7;">
+        🛰 Switch to satellite for better visibility<br>
+        📏 Use measure tool for distance<br>
+        📍 Use my location to start nearby<br>
+        🔍 Search a village or survey number
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- PREDICTOR PANEL -->
+<div class="predictor-panel" id="predictorPanel">
+  <div class="pred-head">
+    <div>
+      <h3>🤖 AI Land Predictor</h3>
+      <p>Price & growth intelligence</p>
+    </div>
+    <button class="pred-close" onclick="togglePredictor()">✕</button>
+  </div>
+  <div class="pred-body">
+    <div class="pred-coming">
+      <div class="pc-icon">🚀</div>
+      <h4>Coming Soon</h4>
+      <p>Our AI is being trained on land records, satellite imagery, and market trends across 18 states.</p>
+    </div>
+    <div class="pred-features">
+      <div class="pred-feat">
+        <div class="pf-icon">📈</div>
+        <div>
+          <h5>Price Prediction</h5>
+          <p>Estimated land value based on location, type, and infrastructure proximity.</p>
+        </div>
+      </div>
+      <div class="pred-feat">
+        <div class="pf-icon">🌱</div>
+        <div>
+          <h5>Growth Forecast</h5>
+          <p>5-year appreciation forecast using highway, metro, and industrial zone data.</p>
+        </div>
+      </div>
+      <div class="pred-feat">
+        <div class="pf-icon">⚖️</div>
+        <div>
+          <h5>Legal Risk Score</h5>
+          <p>Dispute probability score from court and revenue records.</p>
+        </div>
+      </div>
+      <div class="pred-feat">
+        <div class="pf-icon">🏗</div>
+        <div>
+          <h5>Development Potential</h5>
+          <p>Zoning, FSI/FAR analysis, and permitted use classification.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pred-notify">
+      <p style="font-size:0.78rem;color:var(--ink-light);margin-bottom:8px;">
+        Get notified when AI Predictor launches:
+      </p>
+      <input type="email" id="notifyEmail" placeholder="your@email.com">
+      <button onclick="subscribeNotify()">🔔 Notify Me</button>
+    </div>
+  </div>
+</div>
+
+<!-- HINT PILL -->
+<div class="hint-pill" id="hintPill">
+  🗺 Click anywhere on the map to pin your land location
+</div>
+
+<!-- ZOOM DISPLAY -->
+<div class="zoom-display" id="zoomDisplay">Zoom: 5</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// ── STATE ──────────────────────────────────────────────────────
+let selectedLat = null, selectedLng = null;
+let marker = null;
+let isSatellite = true;
+let locWatchId = null;
+let isMeasuring = false;
+let measurePoints = [], measureLine = null, measureMarkers = [];
+const SAVE_KEY = 'landlink_saved';
 
-var selectedLat = null;
-var selectedLng = null;
-var marker;
-
-// initialize map
-var map = L.map('map').setView([20.5937, 78.9629], 5);
-
-// satellite tiles (free)
-L.tileLayer(
-'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-{
-maxZoom: 19
-}).addTo(map);
-
-
-// SMART SEARCH FUNCTION
-document.getElementById("searchBtn").onclick = function(){
-
-let query = document.getElementById("searchBox").value.trim();
-
-if(!query) return;
-
-searchLocation(query);
-
-// recursive fallback search
-function searchLocation(q){
-
-fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(q))
-.then(res => res.json())
-.then(data => {
-
-if(data.length === 0){
-
-// fallback 1 remove commas
-if(q.includes(",")){
-searchLocation(q.replace(/,/g," "));
-return;
-}
-
-// fallback 2 add India
-if(!q.toLowerCase().includes("india")){
-searchLocation(q + " India");
-return;
-}
-
-alert("Location not found. Try city or area name.");
-return;
-}
-
-// use first best result
-let lat = data[0].lat;
-let lon = data[0].lon;
-
-map.setView([lat, lon], 17);
-
-if(marker){
-marker.setLatLng([lat, lon]);
-}else{
-marker = L.marker([lat, lon]).addTo(map);
-}
-
-selectedLat = lat;
-selectedLng = lon;
-
-});
-}
-
-};
-
-
-// click to select land
-map.on('click', function(e){
-
-selectedLat = e.latlng.lat;
-selectedLng = e.latlng.lng;
-
-if(marker){
-marker.setLatLng(e.latlng);
-}else{
-marker = L.marker(e.latlng).addTo(map);
-}
-
+// ── MAP SETUP ──────────────────────────────────────────────────
+const map = L.map('map', {
+  center: [20.5937, 78.9629], zoom: 5,
+  zoomControl: false, attributionControl: true
 });
 
+const satLayer = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom:20, attribution:'Tiles © Esri' }
+);
 
-// confirm button
-document.getElementById("confirmBtn").onclick = function(){
+const streetLayer = L.tileLayer(
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  { maxZoom:19, attribution:'© OpenStreetMap' }
+);
 
-if(!selectedLat){
-alert("Please select land");
-return;
+satLayer.addTo(map);
+
+// Zoom display
+map.on('zoomend', () => {
+  document.getElementById('zoomDisplay').textContent = 'Zoom: ' + map.getZoom();
+});
+
+// ── CUSTOM MARKER ICON ─────────────────────────────────────────
+const greenIcon = L.divIcon({
+  className:'',
+  html:`<div style="position:relative;">
+    <div class="ll-marker-pulse"></div>
+    <div class="ll-marker"></div>
+  </div>`,
+  iconSize:[36,36], iconAnchor:[18,36], popupAnchor:[0,-42]
+});
+
+// ── MAP CLICK ──────────────────────────────────────────────────
+map.on('click', function(e) {
+  if (isMeasuring) { addMeasurePoint(e.latlng); return; }
+  pinLocation(e.latlng.lat, e.latlng.lng);
+});
+
+function pinLocation(lat, lng) {
+  selectedLat = parseFloat(lat).toFixed(6);
+  selectedLng = parseFloat(lng).toFixed(6);
+
+  if (marker) { marker.setLatLng([lat, lng]); }
+  else {
+    marker = L.marker([lat, lng], { icon:greenIcon, draggable:true }).addTo(map);
+    marker.on('dragend', e => {
+      const p = e.target.getLatLng();
+      pinLocation(p.lat, p.lng);
+    });
+  }
+
+  // Update UI
+  document.getElementById('dispLat').textContent  = selectedLat;
+  document.getElementById('dispLng').textContent  = selectedLng;
+  document.getElementById('dispLat').className    = 'coord-val';
+  document.getElementById('dispLng').className    = 'coord-val';
+  document.getElementById('coordDot').classList.add('selected');
+  document.getElementById('confirmBtn').disabled  = false;
+  document.getElementById('cartBtn').disabled     = false;
+  document.getElementById('addrLine').textContent = '⏳ Fetching address…';
+
+  // Hide hint
+  document.getElementById('hintPill').classList.add('hide');
+
+  // Reverse geocode
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+    .then(r => r.json())
+    .then(d => {
+      const addr = d.display_name || 'Address not found';
+      const short = addr.split(',').slice(0,4).join(', ');
+      document.getElementById('addrLine').textContent = '📍 ' + short;
+      marker.bindPopup(
+        `<div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;line-height:1.5;max-width:200px;">
+          <strong>📍 Pinned Location</strong><br>
+          <span style="color:#4a5c4f;">${short}</span><br>
+          <small style="color:#aaa;">Lat: ${selectedLat} · Lng: ${selectedLng}</small>
+        </div>`, { maxWidth:220 }
+      ).openPopup();
+    })
+    .catch(() => {
+      document.getElementById('addrLine').textContent = `📍 ${selectedLat}, ${selectedLng}`;
+    });
 }
 
-window.opener.postMessage({
-lat: selectedLat,
-lng: selectedLng
-},"*");
+// ── LAYER TOGGLE ───────────────────────────────────────────────
+function toggleLayer() {
+  if (isSatellite) {
+    map.removeLayer(satLayer);
+    streetLayer.addTo(map);
+    document.getElementById('layerBtn').textContent = '🗺 Street';
+    document.getElementById('layerBtn').classList.remove('active');
+  } else {
+    map.removeLayer(streetLayer);
+    satLayer.addTo(map);
+    document.getElementById('layerBtn').textContent = '🛰 Satellite';
+    document.getElementById('layerBtn').classList.add('active');
+  }
+  isSatellite = !isSatellite;
+}
 
-window.close();
+// ── SEARCH ─────────────────────────────────────────────────────
+let searchTimer = null;
 
-};
+function onSearchInput() {
+  const q = document.getElementById('searchBox').value.trim();
+  clearTimeout(searchTimer);
+  if (q.length < 3) { hideSuggestions(); return; }
+  searchTimer = setTimeout(() => fetchSuggestions(q), 350);
+}
 
+function fetchSuggestions(q) {
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=in&limit=5`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.length) { hideSuggestions(); return; }
+      const box = document.getElementById('suggestions');
+      box.innerHTML = data.map(item => `
+        <div class="suggestion-item" onclick="selectSuggestion(${item.lat},${item.lon},'${item.display_name.replace(/'/g,'')}')">
+          <span class="s-icon">📍</span>
+          <span>${item.display_name.split(',').slice(0,3).join(', ')}</span>
+        </div>`).join('');
+      box.classList.add('show');
+    }).catch(() => hideSuggestions());
+}
+
+function selectSuggestion(lat, lng, name) {
+  map.setView([lat, lng], 17);
+  pinLocation(lat, lng);
+  document.getElementById('searchBox').value = name.split(',').slice(0,2).join(', ');
+  hideSuggestions();
+  showToast('📍 Location found!', 'green');
+}
+
+function hideSuggestions() {
+  document.getElementById('suggestions').classList.remove('show');
+}
+
+function doSearch() {
+  hideSuggestions();
+  const q = document.getElementById('searchBox').value.trim();
+  if (!q) return;
+
+  function trySearch(query) {
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.length) {
+          if (!query.toLowerCase().includes('india')) { trySearch(query + ' India'); return; }
+          showToast('Location not found. Try a different name.', 'red'); return;
+        }
+        selectSuggestion(data[0].lat, data[0].lon, data[0].display_name);
+      }).catch(() => showToast('Search failed. Check your connection.', 'red'));
+  }
+  trySearch(q);
+}
+
+// Close suggestions on outside click
+document.addEventListener('click', e => {
+  if (!document.querySelector('.search-wrap').contains(e.target)) hideSuggestions();
+});
+
+// ── LOCATE ME ──────────────────────────────────────────────────
+function locateMe() {
+  const btn = document.getElementById('locBtn');
+  btn.textContent = '⏳';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude:lat, longitude:lng } = pos.coords;
+      map.setView([lat, lng], 17);
+      pinLocation(lat, lng);
+      btn.textContent = '📍';
+      showToast('📍 Located you!', 'green');
+    },
+    () => { btn.textContent = '📍'; showToast('Location access denied', 'red'); }
+  );
+}
+
+// ── RESET VIEW ─────────────────────────────────────────────────
+function resetView() {
+  map.setView([20.5937, 78.9629], 5);
+}
+
+// ── MEASURE TOOL ───────────────────────────────────────────────
+function toggleMeasure() {
+  isMeasuring = !isMeasuring;
+  const btn = document.getElementById('measureBtn');
+  btn.classList.toggle('active', isMeasuring);
+
+  if (!isMeasuring) {
+    // Clear measure
+    measurePoints = [];
+    if (measureLine) { map.removeLayer(measureLine); measureLine = null; }
+    measureMarkers.forEach(m => map.removeLayer(m));
+    measureMarkers = [];
+    showToast('Measure mode off', '');
+  } else {
+    showToast('📏 Click two points to measure distance', '');
+  }
+}
+
+function addMeasurePoint(latlng) {
+  measurePoints.push(latlng);
+  const dot = L.circleMarker(latlng, {
+    radius:5, color:'#d97706', fillColor:'#fcd34d',
+    fillOpacity:1, weight:2
+  }).addTo(map);
+  measureMarkers.push(dot);
+
+  if (measurePoints.length === 2) {
+    if (measureLine) map.removeLayer(measureLine);
+    measureLine = L.polyline(measurePoints, { color:'#d97706', weight:2, dashArray:'6,4' }).addTo(map);
+    const dist = measurePoints[0].distanceTo(measurePoints[1]);
+    const txt  = dist >= 1000 ? (dist/1000).toFixed(2)+' km' : Math.round(dist)+' m';
+    showToast('📏 Distance: ' + txt, '');
+    // Reset for next pair
+    measurePoints = [];
+    measureMarkers.forEach(m => map.removeLayer(m));
+    measureMarkers = [];
+    if (measureLine) { map.removeLayer(measureLine); measureLine = null; }
+    isMeasuring = false;
+    document.getElementById('measureBtn').classList.remove('active');
+  }
+}
+
+// ── CONFIRM LOCATION ───────────────────────────────────────────
+function confirmLocation() {
+  if (!selectedLat) { showToast('Please pin a location first', 'red'); return; }
+  // Send to opener (seller_register.html embedded map scenario)
+  if (window.opener) {
+    window.opener.postMessage({ lat: selectedLat, lng: selectedLng }, '*');
+    showToast('✅ Location confirmed!', 'green');
+    setTimeout(() => window.close(), 800);
+  } else {
+    // Standalone use — store and close
+    sessionStorage.setItem('selected_lat', selectedLat);
+    sessionStorage.setItem('selected_lng', selectedLng);
+    showToast('✅ Location saved!', 'green');
+  }
+}
+
+// ── ADD TO CART ────────────────────────────────────────────────
+function addToCart() {
+  if (!selectedLat) { showToast('Please pin a location first', 'red'); return; }
+
+  const saved = getSaved();
+  const key   = 'loc_' + Date.now();
+  const addr  = document.getElementById('addrLine').textContent.replace('📍 ','').replace('⏳ Fetching address…','');
+
+  saved[key] = {
+    id:       key,
+    title:    addr ? addr.split(',')[0] : 'Pinned Location',
+    location: addr || `${selectedLat}, ${selectedLng}`,
+    price:    '0',
+    image:    '',
+    lat:      selectedLat,
+    lng:      selectedLng,
+    from_map: true
+  };
+
+  setSaved(saved);
+
+  const btn = document.getElementById('cartBtn');
+  btn.classList.add('added');
+  btn.textContent = '✅ Added to Cart';
+  btn.disabled = true;
+
+  showToast('🛒 Added to saved lands!', 'green');
+}
+
+function getSaved() {
+  try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; }
+  catch { return {}; }
+}
+function setSaved(obj) { localStorage.setItem(SAVE_KEY, JSON.stringify(obj)); }
+
+// ── PREDICTOR PANEL ────────────────────────────────────────────
+function togglePredictor() {
+  const p = document.getElementById('predictorPanel');
+  const open = p.classList.toggle('open');
+
+  // Shift info panel left when predictor is open
+  const info = document.getElementById('infoPanel');
+  info.style.right = open ? '324px' : '14px';
+  info.style.transition = 'right 0.35s cubic-bezier(0.4,0,0.2,1)';
+}
+
+function subscribeNotify() {
+  const email = document.getElementById('notifyEmail').value.trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email', 'red'); return;
+  }
+  // POST to backend (non-blocking)
+  fetch('/notify_predictor', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ email })
+  }).catch(() => {});
+  showToast('🔔 You\'ll be notified when AI Predictor launches!', 'purple');
+  document.getElementById('notifyEmail').value = '';
+}
+
+// ── TOAST ──────────────────────────────────────────────────────
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.className = 'toast', 3200);
+}
+
+// ── HIDE HINT AFTER 5s ─────────────────────────────────────────
+setTimeout(() => document.getElementById('hintPill').classList.add('hide'), 5000);
 </script>
-
 </body>
 </html>
