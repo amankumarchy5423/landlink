@@ -108,16 +108,81 @@ def logout():
 # -------------------------
 # Home Page
 # -------------------------
+# ── Replace your existing home route in app.py ─────────────────
+
 @app.route("/")
 def home():
+    # ── Load all lands ──
     try:
-        with open(os.path.join(BASE_DIR, "lands.json"), "r") as f:
+        with open(os.path.join(BASE_DIR, "lands.json")) as f:
             lands = json.load(f)
+        # Inject id into each land
+        for i, land in enumerate(lands):
+            land["id"] = i
     except:
         lands = []
 
-    return render_template("home_page.html", lands=lands)
+    seller_land  = None
+    token_buyers = []
 
+    # ── Seller: find their listing and token buyers ──
+    if session.get("purpose") == "sell":
+        phone = session.get("user")
+
+        # Load seller's land from seller_preference
+        pref_path = os.path.join(BASE_DIR, "seller_preference", f"{phone}.json")
+        if os.path.exists(pref_path):
+            with open(pref_path) as f:
+                seller_land = json.load(f)
+
+            # Find this land's index in lands.json so we can link to /land/<id>
+            for i, land in enumerate(lands):
+                if (land.get("location") == seller_land.get("location") and
+                    land.get("title")    == seller_land.get("title")):
+                    seller_land["id"] = i
+                    break
+            else:
+                seller_land["id"] = 0
+
+        # Load token buyers from global bookings.json
+        bookings_file = os.path.join(BASE_DIR, "bookings.json")
+        if os.path.exists(bookings_file):
+            with open(bookings_file) as f:
+                all_bookings = json.load(f)
+
+            # Find bookings that include this seller's land
+            seller_title = seller_land.get("title", "") if seller_land else ""
+
+            for booking in all_bookings:
+                booked_lands = booking.get("lands", [])
+                for bl in booked_lands:
+                    if bl.get("title") == seller_title:
+                        # Load buyer's full name from buyer_data
+                        buyer_phone = booking.get("buyer_phone", "")
+                        buyer_name  = buyer_phone  # fallback
+
+                        buyer_file = os.path.join(BASE_DIR, "buyer_data", f"{buyer_phone}.json")
+                        if os.path.exists(buyer_file):
+                            with open(buyer_file) as f:
+                                buyer_data = json.load(f)
+                            buyer_name = buyer_data.get("name", buyer_phone)
+
+                        token_buyers.append({
+                            "phone":      buyer_phone,
+                            "name":       buyer_name,
+                            "ref_number": booking.get("ref_number", "—"),
+                            "timestamp":  booking.get("timestamp", ""),
+                            "amount":     booking.get("amount_paid", "—"),
+                            "status":     booking.get("status", "token_paid"),
+                        })
+                        break  # one booking = one buyer entry
+
+    return render_template(
+        "home_page.html",
+        lands=lands,
+        seller_land=seller_land,
+        token_buyers=token_buyers,
+    )
 
 # -------------------------
 # Buyer Page
@@ -637,26 +702,124 @@ def process_payment():
 
 
 # ── 3. View Bookings (for profile page) ────────────────────────
+# ── Add / replace these routes in your app.py ──────────────────
+
+
+# ── 1. My Bookings page ─────────────────────────────────────────
 @app.route("/my_bookings")
 def my_bookings():
-    """Returns the logged-in buyer's booking history."""
     if "user" not in session:
         return redirect("/login")
 
     phone   = session["user"]
     purpose = session.get("purpose", "buy")
-    folder  = "buyer_data" if purpose == "buy" else "seller_data"
-    filepath = os.path.join(BASE_DIR, folder, f"{phone}.json")
 
-    try:
-        with open(filepath) as f:
-            user = json.load(f)
-        bookings = user.get("bookings", [])
-    except:
-        bookings = []
+    bookings = []
+
+    if purpose == "buy":
+        # ── BUYER: load their bookings from buyer_data json ──
+        filepath = os.path.join(BASE_DIR, "buyer_data", f"{phone}.json")
+        try:
+            with open(filepath) as f:
+                user = json.load(f)
+            bookings = user.get("bookings", [])
+        except:
+            bookings = []
+
+    else:
+        # ── SELLER: find all bookings that include their land ──
+        # Load seller's land title to match against bookings
+        pref_path = os.path.join(BASE_DIR, "seller_preference", f"{phone}.json")
+        seller_title = ""
+        try:
+            with open(pref_path) as f:
+                seller_pref = json.load(f)
+            seller_title = seller_pref.get("title", "")
+        except:
+            pass
+
+        bookings_file = os.path.join(BASE_DIR, "bookings.json")
+        try:
+            with open(bookings_file) as f:
+                all_bookings = json.load(f)
+        except:
+            all_bookings = []
+
+        for booking in all_bookings:
+            for land in booking.get("lands", []):
+                if land.get("title") == seller_title:
+                    # Enrich with buyer's name
+                    buyer_phone = booking.get("buyer_phone", "")
+                    buyer_name  = buyer_phone
+
+                    buyer_file = os.path.join(BASE_DIR, "buyer_data", f"{buyer_phone}.json")
+                    if os.path.exists(buyer_file):
+                        with open(buyer_file) as f:
+                            buyer_data = json.load(f)
+                        buyer_name = buyer_data.get("name", buyer_phone)
+
+                    booking["buyer_name"] = buyer_name
+                    bookings.append(booking)
+                    break
 
     return render_template("my_bookings.html", bookings=bookings)
 
+
+# ── 2. Update Booking Status (seller marks progress) ───────────
+@app.route("/update_booking_status", methods=["POST"])
+def update_booking_status():
+    if "user" not in session:
+        return {"success": False, "error": "Not logged in"}, 401
+
+    data       = request.get_json()
+    ref_number = data.get("ref_number")
+    new_status = data.get("status")
+
+    VALID_STATUSES = ["token_paid", "docs_verified", "site_visit", "registered", "cancelled"]
+    if new_status not in VALID_STATUSES:
+        return {"success": False, "error": "Invalid status"}, 400
+
+    # ── Update in global bookings.json ──
+    bookings_file = os.path.join(BASE_DIR, "bookings.json")
+    try:
+        with open(bookings_file) as f:
+            all_bookings = json.load(f)
+    except:
+        return {"success": False, "error": "Bookings file not found"}, 500
+
+    updated = False
+    for booking in all_bookings:
+        if booking.get("ref_number") == ref_number:
+            booking["status"] = new_status
+            updated = True
+            buyer_phone = booking.get("buyer_phone", "")
+            break
+
+    if not updated:
+        return {"success": False, "error": "Booking not found"}, 404
+
+    with open(bookings_file, "w") as f:
+        json.dump(all_bookings, f, indent=4)
+
+    # ── Also update in buyer's personal file ──
+    if buyer_phone:
+        buyer_file = os.path.join(BASE_DIR, "buyer_data", f"{buyer_phone}.json")
+        if os.path.exists(buyer_file):
+            try:
+                with open(buyer_file) as f:
+                    buyer_data = json.load(f)
+
+                for b in buyer_data.get("bookings", []):
+                    if b.get("ref_number") == ref_number:
+                        b["status"] = new_status
+                        break
+
+                with open(buyer_file, "w") as f:
+                    json.dump(buyer_data, f, indent=4)
+            except:
+                pass  # non-critical — global file is the source of truth
+
+    return {"success": True, "ref_number": ref_number, "new_status": new_status}
 
 # ── 4. Update navbar heart badge count (optional AJAX) ─────────
 @app.route("/api/saved_count")
@@ -683,4 +846,4 @@ def saved_count():
     return {"count": count}
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True)

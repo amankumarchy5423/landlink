@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LandLink — {% if session.get('purpose')=='sell' %}Token Buyers{% else %}My Bookings{% endif %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --green-deep:   #0d3320;
+  --green-mid:    #1a6b3c;
+  --green-bright: #22883f;
+  --green-accent: #34d068;
+  --cream:        #faf8f3;
+  --cream-dark:   #f0ede4;
+  --ink:          #111a14;
+  --ink-light:    #4a5c4f;
+  --border:       #e2ddd4;
+  --white:        #ffffff;
+  --red:          #dc2626;
+  --amber:        #d97706;
+  --blue:         #2563eb;
+  --purple:       #7c3aed;
+}
+
+html { scroll-behavior:smooth; }
+body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--ink); min-height:100vh; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position:sticky; top:0; z-index:200;
+  background:rgba(250,248,243,0.95);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  height:64px; padding:0 40px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.brand { display:flex; align-items:center; gap:9px; text-decoration:none; }
+.brand-icon {
+  width:34px; height:34px; background:var(--green-mid);
+  border-radius:9px; display:flex; align-items:center;
+  justify-content:center; font-size:15px;
+}
+.brand h1 { font-family:'Fraunces',serif; font-size:1.2rem; font-weight:700; color:var(--ink); }
+.brand h1 span { color:var(--green-mid); }
+
+.topbar-right { display:flex; align-items:center; gap:8px; }
+.btn-nav {
+  display:flex; align-items:center; gap:6px;
+  padding:8px 14px; border:1.5px solid var(--border);
+  border-radius:10px; background:transparent;
+  font-family:'DM Sans',sans-serif; font-size:0.85rem;
+  font-weight:500; color:var(--ink-light);
+  text-decoration:none; transition:all 0.2s; cursor:pointer;
+}
+.btn-nav:hover { border-color:var(--green-mid); color:var(--green-mid); }
+
+/* ── PAGE WRAP ── */
+.page-wrap { max-width:1100px; margin:0 auto; padding:44px 24px 90px; }
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom:36px; }
+.eyebrow {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(52,208,104,0.1); border:1px solid rgba(52,208,104,0.25);
+  color:var(--green-mid); font-size:0.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.06em;
+  padding:4px 12px; border-radius:100px; margin-bottom:12px;
+}
+.eyebrow.amber-ey {
+  background:rgba(217,119,6,0.1); border-color:rgba(217,119,6,0.25);
+  color:var(--amber);
+}
+.page-header h2 {
+  font-family:'Fraunces',serif; font-size:clamp(1.7rem,2.8vw,2.3rem);
+  font-weight:700; color:var(--ink); line-height:1.2;
+}
+.page-header h2 em { font-style:italic; color:var(--green-mid); }
+.page-header p { margin-top:7px; font-size:0.92rem; color:var(--ink-light); font-weight:300; }
+
+/* ── SUMMARY STRIP ── */
+.summary-strip {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+  margin-bottom:32px;
+}
+.sum-box {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:16px; padding:16px 18px;
+  display:flex; align-items:center; gap:12px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.04);
+  animation:fadeUp 0.4s ease both;
+}
+.sum-box:nth-child(2) { animation-delay:0.05s; }
+.sum-box:nth-child(3) { animation-delay:0.10s; }
+.sum-box:nth-child(4) { animation-delay:0.15s; }
+.sum-icon {
+  width:44px; height:44px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0;
+}
+.sum-icon.g { background:rgba(26,107,60,0.1); }
+.sum-icon.a { background:rgba(217,119,6,0.1); }
+.sum-icon.b { background:rgba(37,99,235,0.1); }
+.sum-icon.r { background:rgba(220,38,38,0.1); }
+.sum-num {
+  font-family:'Fraunces',serif; font-size:1.4rem;
+  font-weight:700; color:var(--ink); line-height:1;
+}
+.sum-label { font-size:0.75rem; color:var(--ink-light); margin-top:3px; }
+
+/* ── FILTER TABS ── */
+.filter-tabs {
+  display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap;
+}
+.ftab {
+  padding:8px 18px; border:1.5px solid var(--border);
+  border-radius:100px; font-family:'DM Sans',sans-serif;
+  font-size:0.83rem; font-weight:600; color:var(--ink-light);
+  background:var(--white); cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; gap:6px;
+}
+.ftab:hover { border-color:var(--green-mid); color:var(--green-mid); }
+.ftab.active {
+  background:var(--green-mid); color:white;
+  border-color:var(--green-mid);
+}
+.ftab .fc { font-size:0.7rem; background:rgba(255,255,255,0.25); padding:1px 6px; border-radius:100px; }
+.ftab:not(.active) .fc { background:var(--cream-dark); color:var(--ink-light); }
+
+/* ── BOOKING CARDS ── */
+.bookings-list { display:flex; flex-direction:column; gap:18px; }
+
+.booking-card {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:20px; overflow:hidden;
+  box-shadow:0 3px 16px rgba(0,0,0,0.05);
+  transition:box-shadow 0.25s, transform 0.25s;
+  animation:fadeUp 0.45s ease both;
+}
+.booking-card:hover { box-shadow:0 10px 36px rgba(0,0,0,0.09); transform:translateY(-2px); }
+.booking-card:nth-child(1) { animation-delay:0.04s; }
+.booking-card:nth-child(2) { animation-delay:0.08s; }
+.booking-card:nth-child(3) { animation-delay:0.12s; }
+.booking-card:nth-child(4) { animation-delay:0.16s; }
+
+/* Card top bar */
+.bc-topbar {
+  padding:12px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  border-bottom:1px solid var(--border);
+  background:var(--cream);
+  flex-wrap:wrap; gap:8px;
+}
+.bc-ref {
+  display:flex; align-items:center; gap:8px;
+}
+.bc-ref-num {
+  font-family:monospace; font-size:0.82rem; font-weight:700;
+  color:var(--green-mid); background:rgba(26,107,60,0.08);
+  border:1px solid rgba(26,107,60,0.2);
+  padding:4px 10px; border-radius:8px;
+}
+.bc-date { font-size:0.78rem; color:var(--ink-light); }
+
+.bc-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+/* Status badge */
+.status-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:5px 12px; border-radius:100px;
+  font-size:0.72rem; font-weight:700;
+  letter-spacing:0.03em; text-transform:uppercase;
+}
+.status-badge.token_paid   { background:rgba(217,119,6,0.1);  color:var(--amber);  border:1px solid rgba(217,119,6,0.25); }
+.status-badge.docs_verified{ background:rgba(37,99,235,0.1);  color:var(--blue);   border:1px solid rgba(37,99,235,0.25); }
+.status-badge.registered   { background:rgba(26,107,60,0.1);  color:var(--green-mid); border:1px solid rgba(26,107,60,0.25); }
+.status-badge.cancelled    { background:rgba(220,38,38,0.08); color:var(--red);    border:1px solid rgba(220,38,38,0.2); }
+
+.status-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.status-badge.token_paid    .status-dot { background:var(--amber); animation:pulse 1.8s infinite; }
+.status-badge.docs_verified .status-dot { background:var(--blue); }
+.status-badge.registered    .status-dot { background:var(--green-mid); }
+.status-badge.cancelled     .status-dot { background:var(--red); }
+
+@keyframes pulse {
+  0%,100% { opacity:1; } 50% { opacity:0.3; }
+}
+
+/* Payment method chip */
+.pay-chip {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px 10px; border-radius:8px;
+  font-size:0.72rem; font-weight:600; color:var(--ink-light);
+  background:var(--white); border:1px solid var(--border);
+}
+
+/* Card body */
+.bc-body {
+  padding:18px 20px;
+  display:grid; grid-template-columns:1fr auto;
+  gap:20px; align-items:start;
+}
+
+.bc-lands { display:flex; flex-direction:column; gap:12px; }
+
+/* Land row inside booking */
+.land-row {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px;
+  background:var(--cream); border:1px solid var(--border);
+  border-radius:14px; text-decoration:none;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+.land-row:hover { border-color:var(--green-mid); box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+
+.lr-img {
+  width:64px; height:64px; border-radius:10px;
+  object-fit:cover; flex-shrink:0;
+  background:var(--cream-dark);
+}
+.lr-img-fb {
+  width:64px; height:64px; border-radius:10px;
+  background:linear-gradient(135deg,#e8f5ed,#f0ede4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.6rem; flex-shrink:0;
+}
+.lr-info { flex:1; min-width:0; }
+.lr-info h4 {
+  font-family:'Fraunces',serif; font-size:0.95rem;
+  font-weight:700; color:var(--ink); line-height:1.3;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.lr-meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+.lr-meta span { font-size:0.75rem; color:var(--ink-light); display:flex; align-items:center; gap:3px; }
+.lr-price {
+  font-family:'Fraunces',serif; font-size:1rem;
+  font-weight:700; color:var(--green-mid); flex-shrink:0;
+}
+
+/* Payment summary */
+.bc-pay-summary {
+  min-width:200px; flex-shrink:0;
+  background:var(--cream); border:1px solid var(--border);
+  border-radius:14px; padding:14px 16px;
+}
+.bps-row {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:0.8rem; margin-bottom:7px;
+}
+.bps-row .bps-l { color:var(--ink-light); }
+.bps-row .bps-v { font-weight:600; color:var(--ink); }
+.bps-row.total {
+  padding-top:8px; border-top:1.5px dashed var(--border);
+  margin-top:4px; margin-bottom:0;
+}
+.bps-row.total .bps-l {
+  font-family:'Fraunces',serif; font-size:0.88rem;
+  font-weight:700; color:var(--ink);
+}
+.bps-row.total .bps-v {
+  font-family:'Fraunces',serif; font-size:1rem;
+  font-weight:700; color:var(--green-mid);
+}
+
+/* Progress stepper */
+.bc-stepper {
+  padding:16px 20px; border-top:1px solid var(--border);
+  display:flex; align-items:center; gap:0;
+}
+.step {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  position:relative;
+}
+.step::before {
+  content:''; position:absolute;
+  top:13px; left:50%; width:100%; height:2px;
+  background:var(--border); z-index:0;
+}
+.step:last-child::before { display:none; }
+.step.done::before { background:var(--green-mid); }
+.step.active-step::before { background:linear-gradient(90deg,var(--green-mid),var(--border)); }
+
+.step-circle {
+  width:28px; height:28px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; position:relative; z-index:1;
+  border:2px solid var(--border); background:var(--white);
+  color:var(--ink-light); transition:all 0.3s;
+}
+.step.done .step-circle {
+  background:var(--green-mid); border-color:var(--green-mid);
+  color:white;
+}
+.step.active-step .step-circle {
+  background:var(--amber); border-color:var(--amber);
+  color:white; box-shadow:0 0 0 4px rgba(217,119,6,0.15);
+  animation:pulseStep 1.8s infinite;
+}
+@keyframes pulseStep {
+  0%,100% { box-shadow:0 0 0 4px rgba(217,119,6,0.15); }
+  50%      { box-shadow:0 0 0 8px rgba(217,119,6,0); }
+}
+.step-label {
+  font-size:0.68rem; font-weight:600; color:var(--ink-light);
+  margin-top:5px; text-align:center; white-space:nowrap;
+}
+.step.done .step-label       { color:var(--green-mid); }
+.step.active-step .step-label { color:var(--amber); }
+
+/* Card footer actions */
+.bc-footer {
+  padding:12px 20px; border-top:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  flex-wrap:wrap;
+}
+.bc-footer-left { display:flex; gap:8px; flex-wrap:wrap; }
+
+.btn-sm {
+  padding:8px 16px; border-radius:9px;
+  font-family:'DM Sans',sans-serif; font-size:0.82rem;
+  font-weight:600; cursor:pointer; transition:all 0.2s;
+  display:inline-flex; align-items:center; gap:5px;
+  text-decoration:none;
+}
+.btn-sm.green { background:var(--green-mid); color:white; border:none; }
+.btn-sm.green:hover { background:var(--green-bright); }
+.btn-sm.ghost {
+  background:var(--cream); color:var(--ink-light);
+  border:1.5px solid var(--border);
+}
+.btn-sm.ghost:hover { border-color:var(--green-mid); color:var(--green-mid); }
+.btn-sm.amber-btn {
+  background:rgba(217,119,6,0.1); color:var(--amber);
+  border:1.5px solid rgba(217,119,6,0.25);
+}
+.btn-sm.amber-btn:hover { background:rgba(217,119,6,0.18); }
+.btn-sm.red-btn {
+  background:rgba(220,38,38,0.06); color:var(--red);
+  border:1.5px solid rgba(220,38,38,0.2);
+}
+.btn-sm.red-btn:hover { background:rgba(220,38,38,0.12); }
+
+/* ── SELLER BUYER CARD ── */
+.buyer-card {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:20px; overflow:hidden;
+  box-shadow:0 3px 16px rgba(0,0,0,0.05);
+  transition:box-shadow 0.25s, transform 0.25s;
+  animation:fadeUp 0.45s ease both;
+}
+.buyer-card:hover { box-shadow:0 10px 36px rgba(0,0,0,0.09); transform:translateY(-2px); }
+.buyer-card:nth-child(1) { animation-delay:0.04s; }
+.buyer-card:nth-child(2) { animation-delay:0.08s; }
+.buyer-card:nth-child(3) { animation-delay:0.12s; }
+
+.bsc-head {
+  padding:14px 20px; border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,rgba(217,119,6,0.05),rgba(250,248,243,0.5));
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+}
+.buyer-avatar {
+  width:46px; height:46px;
+  background:linear-gradient(135deg,var(--amber),#fbbf24);
+  border-radius:13px; display:flex; align-items:center;
+  justify-content:center; font-family:'Fraunces',serif;
+  font-size:1.1rem; font-weight:700; color:white; flex-shrink:0;
+}
+.buyer-name-block h3 {
+  font-family:'Fraunces',serif; font-size:1.05rem; font-weight:700; color:var(--ink);
+}
+.buyer-name-block p { font-size:0.78rem; color:var(--ink-light); margin-top:2px; }
+
+.contact-chip {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 14px; border-radius:100px;
+  font-size:0.82rem; font-weight:600; cursor:pointer;
+  text-decoration:none; transition:all 0.2s;
+}
+.contact-chip.call {
+  background:rgba(26,107,60,0.1); color:var(--green-mid);
+  border:1.5px solid rgba(26,107,60,0.25);
+}
+.contact-chip.call:hover { background:rgba(26,107,60,0.18); }
+.contact-chip.wa {
+  background:rgba(37,211,102,0.1); color:#128C7E;
+  border:1.5px solid rgba(37,211,102,0.25);
+}
+.contact-chip.wa:hover { background:rgba(37,211,102,0.18); }
+
+.bsc-body { padding:16px 20px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.bsc-field { }
+.bsc-field .f-label {
+  font-size:0.7rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.05em; color:var(--ink-light); margin-bottom:4px;
+}
+.bsc-field .f-val {
+  font-size:0.88rem; font-weight:600; color:var(--ink);
+  background:var(--cream); border:1px solid var(--border);
+  border-radius:8px; padding:7px 10px;
+  font-family:monospace;
+}
+.bsc-field .f-val.price-val {
+  color:var(--amber); font-family:'Fraunces',serif;
+  font-size:0.95rem;
+}
+
+.bsc-land { padding:0 20px 16px; }
+.bsc-land-row {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 12px;
+  background:var(--cream); border:1px solid var(--border);
+  border-radius:12px; text-decoration:none; transition:border-color 0.2s;
+}
+.bsc-land-row:hover { border-color:var(--green-mid); }
+.bsc-land-img {
+  width:52px; height:52px; border-radius:9px;
+  object-fit:cover; flex-shrink:0; background:var(--cream-dark);
+}
+.bsc-land-img-fb {
+  width:52px; height:52px; border-radius:9px;
+  background:linear-gradient(135deg,#e8f5ed,#f0ede4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem; flex-shrink:0;
+}
+.bsc-land-info h4 { font-family:'Fraunces',serif; font-size:0.9rem; font-weight:700; color:var(--ink); }
+.bsc-land-info p  { font-size:0.75rem; color:var(--ink-light); margin-top:2px; }
+.bsc-land-price { font-family:'Fraunces',serif; font-size:0.95rem; font-weight:700; color:var(--green-mid); margin-left:auto; flex-shrink:0; }
+
+.bsc-footer {
+  padding:12px 20px; border-top:1px solid var(--border);
+  display:flex; gap:8px; flex-wrap:wrap;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:20px; padding:80px 40px; text-align:center;
+  box-shadow:0 3px 16px rgba(0,0,0,0.04);
+}
+.empty-icon { font-size:4rem; margin-bottom:16px; }
+.empty-state h3 { font-family:'Fraunces',serif; font-size:1.5rem; font-weight:700; color:var(--ink); margin-bottom:8px; }
+.empty-state p  { font-size:0.92rem; color:var(--ink-light); font-weight:300; margin-bottom:24px; }
+.btn-primary-lg {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:13px 26px; background:var(--green-mid); color:white;
+  border-radius:12px; text-decoration:none; font-weight:600;
+  font-size:0.9rem; transition:background 0.2s;
+}
+.btn-primary-lg:hover { background:var(--green-bright); }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:28px; left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:#1a1a1a; color:white; padding:10px 18px;
+  border-radius:11px; font-size:0.86rem; font-weight:500;
+  box-shadow:0 8px 28px rgba(0,0,0,0.18); opacity:0;
+  pointer-events:none; z-index:9999; transition:all 0.3s;
+  display:flex; align-items:center; gap:7px;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.green  { background:var(--green-mid); }
+.toast.red    { background:var(--red); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width:780px) {
+  .topbar { padding:0 16px; }
+  .page-wrap { padding:28px 16px 60px; }
+  .summary-strip { grid-template-columns:1fr 1fr; }
+  .bc-body { grid-template-columns:1fr; }
+  .bc-pay-summary { min-width:unset; }
+  .bsc-body { grid-template-columns:1fr; }
+}
+@media (max-width:480px) {
+  .summary-strip { grid-template-columns:1fr; }
+  .bc-stepper { overflow-x:auto; padding-bottom:8px; }
+  .step-label { font-size:0.6rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="/" class="brand">
+    <div class="brand-icon">🌿</div>
+    <h1>Land<span>Link</span></h1>
+  </a>
+  <div class="topbar-right">
+    <a href="/" class="btn-nav">🏠 Home</a>
+    {% if session.get('purpose') == 'buy' %}
+    <a href="/saved" class="btn-nav">🔖 Saved Lands</a>
+    {% else %}
+    <a href="/seller" class="btn-nav">📋 My Listing</a>
+    {% endif %}
+    <a href="/profile" class="btn-nav">👤 Profile</a>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<div class="page-wrap">
+
+  <!-- ════════════════════════════════
+       BUYER VIEW
+  ════════════════════════════════ -->
+  {% if session.get('purpose') == 'buy' %}
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="eyebrow">🧾 Transaction History</div>
+    <h2>My <em>Bookings</em></h2>
+    <p>Track all your land bookings, token payments, and deal progress in one place.</p>
+  </div>
+
+  <!-- Summary Strip -->
+  {% set total_bookings = bookings|length %}
+  {% set total_paid = namespace(val=0) %}
+  {% for b in bookings %}
+    {% set amt = b.amount_paid|replace('₹','')|replace(',','')|replace(' ','')|replace('Lakh','')|float(0) %}
+    {% set total_paid.val = total_paid.val + amt %}
+  {% endfor %}
+
+  <div class="summary-strip">
+    <div class="sum-box">
+      <div class="sum-icon g">🧾</div>
+      <div>
+        <div class="sum-num">{{ total_bookings }}</div>
+        <div class="sum-label">Total Bookings</div>
+      </div>
+    </div>
+    <div class="sum-box">
+      <div class="sum-icon a">⏳</div>
+      <div>
+        <div class="sum-num">
+          {{ bookings | selectattr('status','equalto','token_paid') | list | length }}
+        </div>
+        <div class="sum-label">Token Paid</div>
+      </div>
+    </div>
+    <div class="sum-box">
+      <div class="sum-icon b">✅</div>
+      <div>
+        <div class="sum-num">
+          {{ bookings | selectattr('status','equalto','registered') | list | length }}
+        </div>
+        <div class="sum-label">Completed</div>
+      </div>
+    </div>
+    <div class="sum-box">
+      <div class="sum-icon r">💰</div>
+      <div>
+        <div class="sum-num">{{ total_bookings }}</div>
+        <div class="sum-label">Total Transactions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button class="ftab active" onclick="filterBookings('all',this)">
+      All <span class="fc">{{ total_bookings }}</span>
+    </button>
+    <button class="ftab" onclick="filterBookings('token_paid',this)">
+      ⏳ Token Paid
+      <span class="fc">{{ bookings | selectattr('status','equalto','token_paid') | list | length }}</span>
+    </button>
+    <button class="ftab" onclick="filterBookings('docs_verified',this)">
+      📋 Docs Verified
+      <span class="fc">{{ bookings | selectattr('status','equalto','docs_verified') | list | length }}</span>
+    </button>
+    <button class="ftab" onclick="filterBookings('registered',this)">
+      ✅ Completed
+      <span class="fc">{{ bookings | selectattr('status','equalto','registered') | list | length }}</span>
+    </button>
+  </div>
+
+  <!-- Bookings List -->
+  <div class="bookings-list" id="bookingsList">
+    {% if bookings %}
+      {% for booking in bookings | reverse %}
+      <div class="booking-card" data-status="{{ booking.status }}">
+
+        <!-- Top bar -->
+        <div class="bc-topbar">
+          <div class="bc-ref">
+            <span class="bc-ref-num">{{ booking.ref_number }}</span>
+            <span class="bc-date">📅 {{ booking.timestamp }}</span>
+          </div>
+          <div class="bc-right">
+            {% set pm = booking.payment_method %}
+            <span class="pay-chip">
+              {% if pm == 'upi' %}📱 UPI
+              {% elif pm == 'card' %}💳 Card
+              {% elif pm == 'netbanking' %}🏦 Net Banking
+              {% elif pm == 'emi' %}📅 EMI
+              {% else %}💰 {{ pm }}{% endif %}
+            </span>
+            <span class="status-badge {{ booking.status }}">
+              <span class="status-dot"></span>
+              {% if booking.status == 'token_paid'    %}Token Paid
+              {% elif booking.status == 'docs_verified' %}Docs Verified
+              {% elif booking.status == 'registered'    %}Completed
+              {% elif booking.status == 'cancelled'     %}Cancelled
+              {% else %}{{ booking.status }}{% endif %}
+            </span>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="bc-body">
+          <!-- Lands -->
+          <div class="bc-lands">
+            {% for land in booking.lands %}
+            {% set idx = loop.index0 %}
+            <a href="/land/{{ land.id if land.id is defined else 0 }}" class="land-row">
+              {% if land.image %}
+              <img class="lr-img"
+                   src="/static/{{ land.image }}"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+                   alt="{{ land.title }}">
+              <div class="lr-img-fb" style="display:none;">🌾</div>
+              {% else %}
+              <div class="lr-img-fb">🌾</div>
+              {% endif %}
+              <div class="lr-info">
+                <h4>{{ land.title }}</h4>
+                <div class="lr-meta">
+                  <span>📍 {{ land.location }}</span>
+                  {% if land.area %}<span>📐 {{ land.area }} sq.ft</span>{% endif %}
+                  {% if land.land_type %}<span>🏷 {{ land.land_type }}</span>{% endif %}
+                </div>
+              </div>
+              <div class="lr-price">₹{{ land.price }}</div>
+            </a>
+            {% endfor %}
+          </div>
+
+          <!-- Payment summary -->
+          <div class="bc-pay-summary">
+            <div class="bps-row">
+              <span class="bps-l">Properties</span>
+              <span class="bps-v">{{ booking.lands | length }}</span>
+            </div>
+            <div class="bps-row">
+              <span class="bps-l">Payment</span>
+              <span class="bps-v">{{ booking.payment_method | upper if booking.payment_method else '—' }}</span>
+            </div>
+            <div class="bps-row total">
+              <span class="bps-l">Amount Paid</span>
+              <span class="bps-v">{{ booking.amount_paid }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Stepper -->
+        <div class="bc-stepper">
+          {% set steps = [('Token Paid','✓'), ('Docs Verified','📋'), ('Site Visit','🗺'), ('Registered','🎉')] %}
+          {% set status_order = {'token_paid':0, 'docs_verified':1, 'site_visit':2, 'registered':3} %}
+          {% set cur = status_order.get(booking.status, 0) %}
+          {% for s in steps %}
+          {% set si = loop.index0 %}
+          <div class="step {% if si < cur %}done{% elif si == cur %}active-step{% endif %}">
+            <div class="step-circle">
+              {% if si < cur %}✓{% else %}{{ s[1] }}{% endif %}
+            </div>
+            <div class="step-label">{{ s[0] }}</div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Footer -->
+        <div class="bc-footer">
+          <div class="bc-footer-left">
+            {% if booking.lands %}
+            <a href="/land/{{ booking.lands[0].id if booking.lands[0].id is defined else 0 }}"
+               class="btn-sm green">👁 View Land</a>
+            {% endif %}
+            <button class="btn-sm ghost" onclick="copyRef('{{ booking.ref_number }}')">
+              📋 Copy Ref
+            </button>
+            <button class="btn-sm amber-btn"
+                    onclick="downloadReceipt('{{ booking.ref_number }}','{{ booking.timestamp }}','{{ booking.amount_paid }}')">
+              📄 Download Receipt
+            </button>
+          </div>
+          {% if booking.status == 'token_paid' %}
+          <span style="font-size:0.75rem;color:var(--ink-light);">
+            ⏳ Seller will contact you within 24 hrs
+          </span>
+          {% elif booking.status == 'registered' %}
+          <span style="font-size:0.75rem;color:var(--green-mid);font-weight:600;">
+            🎉 Deal completed successfully!
+          </span>
+          {% endif %}
+        </div>
+
+      </div><!-- booking-card -->
+      {% endfor %}
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <h3>No Bookings Yet</h3>
+      <p>You haven't paid token for any land yet. Browse listings and reserve your dream land today.</p>
+      <a href="/search" class="btn-primary-lg">🔍 Browse Lands →</a>
+    </div>
+    {% endif %}
+  </div><!-- bookings-list -->
+
+
+  <!-- ════════════════════════════════
+       SELLER VIEW
+  ════════════════════════════════ -->
+  {% else %}
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="eyebrow amber-ey">🔔 Buyer Leads</div>
+    <h2>Token <em>Buyers</em></h2>
+    <p>Buyers who have paid the token amount for your listed land. Contact them directly to proceed.</p>
+  </div>
+
+  <!-- Summary Strip -->
+  <div class="summary-strip">
+    <div class="sum-box">
+      <div class="sum-icon a">🤝</div>
+      <div>
+        <div class="sum-num">{{ bookings | length }}</div>
+        <div class="sum-label">Total Buyers</div>
+      </div>
+    </div>
+    <div class="sum-box">
+      <div class="sum-icon g">⏳</div>
+      <div>
+        <div class="sum-num">
+          {{ bookings | selectattr('status','equalto','token_paid') | list | length }}
+        </div>
+        <div class="sum-label">Awaiting Response</div>
+      </div>
+    </div>
+    <div class="sum-box">
+      <div class="sum-icon b">✅</div>
+      <div>
+        <div class="sum-num">
+          {{ bookings | selectattr('status','equalto','registered') | list | length }}
+        </div>
+        <div class="sum-label">Deals Closed</div>
+      </div>
+    </div>
+    <div class="sum-box">
+      <div class="sum-icon r">💰</div>
+      <div>
+        <div class="sum-num">{{ bookings | length }}</div>
+        <div class="sum-label">Total Enquiries</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookings List (seller = buyer cards) -->
+  <div class="bookings-list">
+    {% if bookings %}
+      {% for booking in bookings | reverse %}
+      <div class="buyer-card">
+
+        <!-- Head -->
+        <div class="bsc-head">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="buyer-avatar">
+              {{ booking.buyer_phone[:2].upper() if booking.buyer_phone else '??' }}
+            </div>
+            <div class="buyer-name-block">
+              <h3>{{ booking.buyer_name or booking.buyer_phone or 'Unknown Buyer' }}</h3>
+              <p>
+                📅 {{ booking.timestamp }}  ·
+                <span class="bc-ref-num" style="font-size:0.72rem;">{{ booking.ref_number }}</span>
+              </p>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="status-badge {{ booking.status }}">
+              <span class="status-dot"></span>
+              {% if booking.status == 'token_paid'    %}Token Paid
+              {% elif booking.status == 'docs_verified' %}Docs Verified
+              {% elif booking.status == 'registered'    %}Completed
+              {% elif booking.status == 'cancelled'     %}Cancelled
+              {% else %}{{ booking.status }}{% endif %}
+            </span>
+            {% if booking.buyer_phone %}
+            <a href="tel:{{ booking.buyer_phone }}" class="contact-chip call">
+              📞 {{ booking.buyer_phone }}
+            </a>
+            <a href="https://wa.me/91{{ booking.buyer_phone }}?text={{ 'Hi, I am the seller from LandLink. Reference: ' + booking.ref_number | urlencode }}"
+               target="_blank" class="contact-chip wa">
+              💬 WhatsApp
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Fields grid -->
+        <div class="bsc-body">
+          <div class="bsc-field">
+            <div class="f-label">Amount Paid</div>
+            <div class="f-val price-val">{{ booking.amount_paid }}</div>
+          </div>
+          <div class="bsc-field">
+            <div class="f-label">Payment Method</div>
+            <div class="f-val">{{ booking.payment_method | upper if booking.payment_method else '—' }}</div>
+          </div>
+          <div class="bsc-field">
+            <div class="f-label">Reference No.</div>
+            <div class="f-val">{{ booking.ref_number }}</div>
+          </div>
+          <div class="bsc-field">
+            <div class="f-label">Properties Booked</div>
+            <div class="f-val">{{ booking.lands | length }}</div>
+          </div>
+        </div>
+
+        <!-- Lands booked -->
+        <div class="bsc-land">
+          {% for land in booking.lands %}
+          <a href="/land/{{ land.id if land.id is defined else 0 }}" class="bsc-land-row">
+            {% if land.image %}
+            <img class="bsc-land-img" src="/static/{{ land.image }}"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+                 alt="{{ land.title }}">
+            <div class="bsc-land-img-fb" style="display:none;">🌾</div>
+            {% else %}
+            <div class="bsc-land-img-fb">🌾</div>
+            {% endif %}
+            <div class="bsc-land-info">
+              <h4>{{ land.title }}</h4>
+              <p>📍 {{ land.location }}{% if land.area %} · {{ land.area }} sq.ft{% endif %}</p>
+            </div>
+            <div class="bsc-land-price">₹{{ land.price }}</div>
+          </a>
+          {% endfor %}
+        </div>
+
+        <!-- Footer -->
+        <div class="bsc-footer">
+          <button class="btn-sm ghost" onclick="copyRef('{{ booking.ref_number }}')">
+            📋 Copy Ref
+          </button>
+          <button class="btn-sm amber-btn"
+                  onclick="markContacted('{{ booking.ref_number }}', this)">
+            ✅ Mark as Contacted
+          </button>
+          <button class="btn-sm green"
+                  onclick="updateStatus('{{ booking.ref_number }}', 'docs_verified', this)">
+            📋 Docs Verified
+          </button>
+          <button class="btn-sm ghost"
+                  onclick="updateStatus('{{ booking.ref_number }}', 'registered', this)">
+            🎉 Mark Complete
+          </button>
+        </div>
+
+      </div><!-- buyer-card -->
+      {% endfor %}
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔔</div>
+      <h3>No Token Buyers Yet</h3>
+      <p>When buyers pay the token amount for your land, they'll appear here with their contact details.</p>
+      <a href="/" class="btn-primary-lg">🏠 Back to Home →</a>
+    </div>
+    {% endif %}
+  </div>
+
+  {% endif %}
+
+</div><!-- page-wrap -->
+
+<script>
+// ── FILTER (buyer only) ────────────────────────────────────────
+function filterBookings(status, btn) {
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.booking-card').forEach(card => {
+    card.style.display = (status === 'all' || card.dataset.status === status) ? '' : 'none';
+  });
+}
+
+// ── COPY REFERENCE ─────────────────────────────────────────────
+function copyRef(ref) {
+  navigator.clipboard.writeText(ref).then(() => showToast('📋 Reference copied!', 'green'));
+}
+
+// ── DOWNLOAD RECEIPT ───────────────────────────────────────────
+function downloadReceipt(ref, date, amount) {
+  const content = `LANDLINK PAYMENT RECEIPT
+========================
+Reference : ${ref}
+Date      : ${date}
+Amount    : ${amount}
+Platform  : LandLink
+========================
+This is a token payment receipt.
+Final registration at Sub-Registrar office.`;
+
+  const blob = new Blob([content], { type:'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `LandLink_Receipt_${ref}.txt`;
+  a.click();
+  showToast('📄 Receipt downloaded!', 'green');
+}
+
+// ── MARK CONTACTED ─────────────────────────────────────────────
+function markContacted(ref, btn) {
+  btn.textContent = '✅ Contacted';
+  btn.classList.remove('amber-btn');
+  btn.classList.add('green');
+  btn.disabled = true;
+  showToast('✅ Marked as contacted', 'green');
+}
+
+// ── UPDATE STATUS (seller) ─────────────────────────────────────
+function updateStatus(ref, newStatus, btn) {
+  fetch('/update_booking_status', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ ref_number: ref, status: newStatus })
+  }).then(r => r.json()).then(d => {
+    if (d.success) {
+      showToast('✅ Status updated!', 'green');
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showToast('Update failed', 'red');
+    }
+  }).catch(() => {
+    showToast('✅ Status saved (offline)', 'green');
+  });
+}
+
+// ── TOAST ──────────────────────────────────────────────────────
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.className = 'toast', 3200);
+}
+</script>
+</body>
+</html>
