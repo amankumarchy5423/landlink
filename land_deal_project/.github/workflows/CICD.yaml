@@ -1,0 +1,6 @@
+name: 'landlink_project' 
+
+on:
+   push:
+    branches:
+        - 'main'

@@ -1,0 +1,54 @@
+# Git
+
+.git
+.gitignore
+
+# GitHub workflows
+
+.github
+
+# Python cache
+
+**pycache**
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
+# Virtual environment
+
+.venv
+venv
+env
+
+# Environment variables / secrets
+
+.env
+.env.*
+
+# OS files
+
+.DS_Store
+Thumbs.db
+
+# IDE
+
+.vscode
+.idea
+
+# Logs
+
+*.log
+
+# Tests (optional)
+
+tests
+pytest.ini
+
+# Docker
+
+Dockerfile
+.dockerignore
+infrastructure/
+bookings.json
+lands.json
