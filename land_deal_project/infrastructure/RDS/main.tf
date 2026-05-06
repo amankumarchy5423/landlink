@@ -40,4 +40,3 @@ resource "aws_db_instance" "main" {
   publicly_accessible = false
 }
 
-output "db_endpoint" { value = aws_db_instance.main.address }

@@ -36,11 +36,11 @@ variable "project_name" {
 }
 
 variable "app_port" {
-  default = 8080                             
+  default = 8080                            
 }
 
 variable "docker_image" {
-  default = "amanmlops/landlink:v2"           
+  default = "amanmlops/landlink:v1"           
 }
 
 variable "db_name" {

@@ -649,4 +649,4 @@ with app.app_context():
 
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=PORT, debug=os.environ.get("FLASK_ENV") == "development")
+    app.run()
