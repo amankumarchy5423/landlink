@@ -23,9 +23,12 @@ DB_USER = os.environ.get("DB_USER", "landlink_user")
 DB_PASS = os.environ.get("DB_PASSWORD", "Aman5423")
 APP_PORT = os.environ.get("APP_PORT", "8080")
 
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    f'postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
-)
+if os.environ.get("FLASK_ENV") == "development":
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///landlink.db"
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = (
+        f'postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+    )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
